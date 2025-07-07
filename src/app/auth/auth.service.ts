@@ -1,79 +1,79 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, firstValueFrom } from 'rxjs';
 import { User } from '../entity/user';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
-import { CryptoService } from './crypto.service';
+
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+interface LoginResponse {
+  token: string;
+  user: {
+    name: string;
+    email: string;
+    role: string;
+  };
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-
+  private http = inject(HttpClient);
   private apiUrl = environment.apiUrl + '/user';
   
-  constructor(private cryptoService: CryptoService) {}
-  
   async register(newUser: User): Promise<User> {
-    const obfuscatedPassword = this.cryptoService.obfuscatePassword(newUser.password);
-    
-    const userWithObfuscatedPassword = {
-      ...newUser,
-      password: obfuscatedPassword
-    };
-    
-    console.log('Registering user:', { 
-      name: userWithObfuscatedPassword.name, 
-      email: userWithObfuscatedPassword.email, 
-      role: userWithObfuscatedPassword.role,
-      password: '[OBFUSCATED]'
-    });
-    
-    const response = await fetch(`${this.apiUrl}/create`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-Password-Encoding': 'base64-obfuscated' 
-      },
-      body: JSON.stringify(userWithObfuscatedPassword)
-    });
-  
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.detail); 
+    try {
+      const response$ = this.http.post<User>(`${this.apiUrl}/create`, newUser);
+      const result = await firstValueFrom(response$);
+      
+      console.log('Registro realizado com sucesso');
+      return result;
+      
+    } catch (error: any) {
+      console.error('Erro no registro:', error);
+      
+      if (error.error?.error === 'EMAIL_ALREADY_EXISTS') {
+        throw new Error('Este email já está cadastrado');
+      }
+      
+      const errorMessage = error.error?.description || 
+                          error.error?.detail || 
+                          error.error?.message || 
+                          error.message || 
+                          'Erro no cadastro';
+      
+      throw new Error(errorMessage);
     }
-  
-    return data;
   }
 
   async login(email: string, password: string): Promise<boolean> {
-    const obfuscatedPassword = this.cryptoService.obfuscatePassword(password);
-    
-    console.log('Login attempt for:', email);
-    
-    const response = await fetch(`${this.apiUrl}/login`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-Password-Encoding': 'base64-obfuscated' 
-      },
-      body: JSON.stringify({ 
-        email, 
-        password: obfuscatedPassword 
-      }),
-    });
-
-    if (response.status === 400) {
-      throw new Error('Credenciais inválidas. Verifique seu email e senha.');
+    try {
+      const loginData: LoginRequest = { email, password };
+      const response$ = this.http.post<LoginResponse>(`${this.apiUrl}/login`, loginData);
+      const result = await firstValueFrom(response$);
+      
+      localStorage.setItem('token', result.token);
+      console.log('Login realizado com sucesso');
+      return true;
+      
+    } catch (error: any) {
+      console.error('Erro no login:', error);
+      
+      if (error.status === 400 || error.status === 404) {
+        throw new Error('Email ou senha incorretos');
+      }
+      
+      const errorMessage = error.error?.description || 
+                          error.error?.message || 
+                          'Erro no login';
+      
+      throw new Error(errorMessage);
     }
-
-    if (!response.ok) {
-      throw new Error('Login falhou');
-    }
-    
-    const data = await response.json();
-    localStorage.setItem('token', data.token);
-    return true;
   }
   
   isAuthenticated(): boolean {

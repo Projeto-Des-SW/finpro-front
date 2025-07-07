@@ -48,7 +48,7 @@ export class RegisterComponent {
       const newUser: User = { name, email, password, role: role.toUpperCase() };
   
       this.authService.register(newUser)
-        .then(() => this.router.navigate(['/home']))
+        .then(() => this.router.navigate(['/login']))
         .catch((error: Error) => {
           const errorMessage = error.message;
           const lowerMessage = errorMessage.toLowerCase();
