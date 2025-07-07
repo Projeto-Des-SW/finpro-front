@@ -1,91 +1,120 @@
-<section class="form-container">
-  <div class="register-container">
-    <div class="title-container">
-      <h2>Cadastre-se</h2>
-    </div>
-
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-      <div class="input-container">
-        <label for="usuario">Nome completo</label>
-        <input type="text" id="usuario" formControlName="name" placeholder="Digite seu nome completo" required />
-        <p class="error" *ngIf="
-            registerForm.get('name')?.invalid &&
-            registerForm.get('name')?.touched
-          ">
-          <span *ngIf="registerForm.get('name')?.hasError('required')">Campo obrigatório</span>
-          <span *ngIf="registerForm.get('name')?.hasError('minlength')">Mínimo de 3 caracteres</span>
-          <span *ngIf="registerForm.get('name')?.hasError('serverError')">
-            {{ registerForm.get('name')?.getError('serverError') }}
-          </span>
-        </p>
-      </div>
-
-      <div class="input-container">
-        <label for="email">Email</label>
-        <input type="email" id="email" formControlName="email" placeholder="Teste@gmail.com" required />
-        <p class="error" *ngIf="
-            registerForm.get('email')?.invalid &&
-            registerForm.get('email')?.touched
-          ">
-          <span *ngIf="registerForm.get('email')?.hasError('required')">Campo obrigatório</span>
-          <span *ngIf="registerForm.get('email')?.hasError('email')">E-mail inválido</span>
-          <span *ngIf="registerForm.get('email')?.hasError('serverError')">
-            {{ registerForm.get('email')?.getError('serverError') }}
-          </span>
-        </p>
-      </div>
-
-      <div class="input-container">
-        <label for="password">Senha</label>
-        <input [type]="passwordVisible ? 'text' : 'password'" id="password" formControlName="password"
-          placeholder="Digite uma senha" required />
-        <p class="error" *ngIf="
-            registerForm.controls['password'].invalid &&
-            registerForm.controls['password'].touched
-          ">
-          {{
-          registerForm.controls['password'].hasError('required')
-          ? 'Campo obrigatório'
-          : 'Mínimo de 6 caracteres'
-          }}
-        </p>
-      </div>
-
-      <div class="input-container">
-        <label for="confirm-password">Confirme a senha</label>
-        <input [type]="confirmPasswordVisible ? 'text' : 'password'" id="confirm-password"
-          formControlName="confirmPassword" placeholder="Confirme a senha" required />
-        <p class="error" *ngIf="
-            registerForm.hasError('passwordMismatch') &&
-            registerForm.controls['confirmPassword'].touched
-          ">
-          As senhas não coincidem!
-        </p>
-      </div>
-
-      <div class="input-container-sub">
-        <label for="role">Função</label>
-        <select id="role" formControlName="role" required>
-          <option value="" disabled selected>Selecione um papel</option>
-          <option value="ADMIN">Admin</option>
-          <option value="USER">User</option>
-        </select>
-        <p class="error" *ngIf="
-            registerForm.controls['role'].invalid &&
-            registerForm.controls['role'].touched
-          ">
-          Campo obrigatório
-        </p>
-      </div>
-
-      <button type="submit" [disabled]="registerForm.invalid">
-        Criar conta
-      </button>
-    </form>
-
-    <p>
-      Já possui uma conta?
-      <a [routerLink]="'/login'" class="login-link">Entre aqui</a>
-    </p>
+<div class="page-container">
+  <!-- Seção lateral com imagem -->
+  <div class="left-section">
+    <img src="/assets/finpro.png" alt="FinPro" class="logo">
+    <div class="background-image"></div>
   </div>
-</section>
+
+  <section class="form-container">
+    <div class="register-container">
+      <div class="title-container">
+        <h2>Cadastre-se</h2>
+      </div>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <div class="input-container">
+          <label for="usuario">Nome completo</label>
+          <input type="text" id="usuario" formControlName="name" placeholder="Digite seu nome completo" required />
+          <p class="error" *ngIf="
+              registerForm.get('name')?.invalid &&
+              registerForm.get('name')?.touched
+            ">
+            <span *ngIf="registerForm.get('name')?.hasError('required')">Campo obrigatório</span>
+            <span *ngIf="registerForm.get('name')?.hasError('minlength')">Mínimo de 3 caracteres</span>
+            <span *ngIf="registerForm.get('name')?.hasError('serverError')">
+              {{ registerForm.get('name')?.getError('serverError') }}
+            </span>
+          </p>
+        </div>
+
+        <div class="input-container">
+          <label for="email">Email</label>
+          <input type="email" id="email" formControlName="email" placeholder="Teste@gmail.com" required />
+          <p class="error" *ngIf="
+              registerForm.get('email')?.invalid &&
+              registerForm.get('email')?.touched
+            ">
+            <span *ngIf="registerForm.get('email')?.hasError('required')">Campo obrigatório</span>
+            <span *ngIf="registerForm.get('email')?.hasError('email')">E-mail inválido</span>
+            <span *ngIf="registerForm.get('email')?.hasError('serverError')">
+              {{ registerForm.get('email')?.getError('serverError') }}
+            </span>
+          </p>
+        </div>
+
+        <div class="input-container">
+          <label for="password">Senha</label>
+          <div class="password-container">
+            <input [type]="passwordVisible ? 'text' : 'password'" id="password" formControlName="password"
+              placeholder="Digite uma senha" required />
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility('password')">
+<img *ngIf="!passwordVisible" src="/assets/olho-aberto.svg" alt="Mostrar senha" width="26" height="26">
+<img *ngIf="passwordVisible" src="/assets/olho-fechado.svg" alt="Ocultar senha" width="26" height="26">
+            </button>
+          </div>
+          <p class="error" *ngIf="
+              registerForm.controls['password'].invalid &&
+              registerForm.controls['password'].touched
+            ">
+            {{
+            registerForm.controls['password'].hasError('required')
+            ? 'Campo obrigatório'
+            : 'Mínimo de 8 caracteres'
+            }}
+          </p>
+        </div>
+
+        <div class="input-container">
+          <label for="confirm-password">Confirme a senha</label>
+          <div class="password-container">
+            <input [type]="confirmPasswordVisible ? 'text' : 'password'" id="confirm-password"
+              formControlName="confirmPassword" placeholder="Confirme a senha" required />
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility('confirmPassword')">
+<img *ngIf="!confirmPasswordVisible" src="/assets/olho-aberto.svg" alt="Mostrar senha" width="26" height="26">
+<img *ngIf="confirmPasswordVisible" src="/assets/olho-fechado.svg" alt="Ocultar senha" width="26" height="26">
+            </button>
+          </div>
+          <p class="error" *ngIf="
+              registerForm.hasError('passwordMismatch') &&
+              registerForm.controls['confirmPassword'].touched
+            ">
+            As senhas não coincidem!
+          </p>
+        </div>
+
+        <div class="input-container-sub">
+          <label for="role">Função</label>
+          <select id="role" formControlName="role" required>
+            <option value="" disabled selected>Selecione um papel</option>
+            <option value="USER">Usuário</option>
+            <option value="ADMIN">Administrador</option>
+
+          </select>
+          <p class="error" *ngIf="
+              registerForm.controls['role'].invalid &&
+              registerForm.controls['role'].touched
+            ">
+            Campo obrigatório
+          </p>
+        </div>
+
+        <button type="submit" [disabled]="registerForm.invalid">
+          Criar conta
+        </button>
+      </form>
+
+      <p>
+        Já possui uma conta?
+        <a [routerLink]="'/login'" class="login-link">Entre aqui</a>
+      </p>
+
+      <div class="divider">
+        <span>ou aprenda sobre o mundo financeiro com a FinPro</span>
+      </div>
+
+      <button class="financial-btn" type="button">
+        Aprenda sobre finanças
+      </button>
+    </div>
+  </section>
+</div>
