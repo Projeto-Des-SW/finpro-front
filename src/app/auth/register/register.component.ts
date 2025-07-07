@@ -53,7 +53,6 @@ export class RegisterComponent {
           const errorMessage = error.message;
           const lowerMessage = errorMessage.toLowerCase();
   
-          // Verifica o conteúdo da mensagem
           if (lowerMessage.includes('usuário') || lowerMessage.includes('name')) {
             this.registerForm.get('name')?.setErrors({
               ...this.registerForm.get('name')?.errors,

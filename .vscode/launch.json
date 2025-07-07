@@ -3,6 +3,13 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "java",
+      "name": "FinproServiceApplication",
+      "request": "launch",
+      "mainClass": "com.ufape.finproservice.FinproServiceApplication",
+      "projectName": "finpro-service"
+    },
+    {
       "name": "ng serve",
       "type": "chrome",
       "request": "launch",
