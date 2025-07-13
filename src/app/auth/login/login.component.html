@@ -1,35 +1,61 @@
-<section class="form-container">
-  <div class="login-container">
-    <div class="title-container">
-      <h2>Login</h2>
-    </div>
-
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div class="input-container">
-        <label for="email">Email</label>
-        <input type="email" id="email" formControlName="email" placeholder="Digite seu email" required />
-        <p class="error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-          <span *ngIf="loginForm.get('email')?.hasError('required')">Campo obrigatório</span>
-          <span *ngIf="loginForm.get('email')?.hasError('email')">E-mail inválido</span>
-        </p>
-      </div>
-
-      <div class="input-container">
-        <label for="password">Senha</label>
-        <input type="password" id="password" formControlName="password" placeholder="Digite sua senha" required />
-        <p class="error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-          Campo obrigatório
-        </p>
-      </div>
-
-      <button type="submit" [disabled]="loginForm.invalid">
-        Entrar
-      </button>
-    </form>
-
-    <p>
-      Não possui uma conta?
-      <a [routerLink]="'/cadastro'" class="register-link">Cadastre-se</a>
-    </p>
+<div class="page-container">
+  <!-- Seção lateral com imagem -->
+  <div class="left-section">
+    <img src="/assets/finpro.png" alt="FinPro" class="logo">
+    <div class="background-image"></div>
   </div>
-</section>
+
+  <section class="form-container">
+    <div class="login-container">
+      <div class="title-container">
+        <h2>Login</h2>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="input-container">
+          <label for="email">Email</label>
+          <input type="email" id="email" formControlName="email" placeholder="Digite seu email" required />
+          <p class="error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            <span *ngIf="loginForm.get('email')?.hasError('required')">Campo obrigatório</span>
+            <span *ngIf="loginForm.get('email')?.hasError('email')">E-mail inválido</span>
+          </p>
+        </div>
+
+        <div class="input-container">
+          <label for="password">Senha</label>
+          <div class="password-container">
+            <input [type]="passwordVisible ? 'text' : 'password'" id="password" formControlName="password" placeholder="Digite sua senha" required />
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
+              <img *ngIf="!passwordVisible" src="/assets/olho-aberto.svg" alt="Mostrar senha" width="26" height="26">
+              <img *ngIf="passwordVisible" src="/assets/olho-fechado.svg" alt="Ocultar senha" width="26" height="26">
+            </button>
+          </div>
+          <p class="error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            Campo obrigatório
+          </p>
+        </div>
+
+        <button type="submit" [disabled]="loginForm.invalid || loading">
+          {{ loading ? 'Entrando...' : 'Entrar' }}
+        </button>
+
+        <p class="error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </p>
+      </form>
+
+      <p>
+        Não possui uma conta?
+        <a [routerLink]="'/cadastro'" class="register-link">Cadastre-se</a>
+      </p>
+
+      <div class="divider">
+        <span>ou aprenda sobre o mundo financeiro com a FinPro</span>
+      </div>
+
+      <button class="financial-btn" type="button">
+        Aprenda sobre finanças
+      </button>
+    </div>
+  </section>
+</div>
