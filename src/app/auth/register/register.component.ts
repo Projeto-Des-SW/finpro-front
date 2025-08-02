@@ -21,8 +21,7 @@ export class RegisterComponent {
     name: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
-    confirmPassword: ['', [Validators.required]],
-    role: ['', Validators.required]
+    confirmPassword: ['', [Validators.required]]
   }, { validators: this.passwordMatchValidator });
 
   passwordVisible = false; 
@@ -44,8 +43,13 @@ export class RegisterComponent {
 
   onSubmit() {
     if (this.registerForm.valid) {
-      const { name, email, password, role } = this.registerForm.value;
-      const newUser: User = { name, email, password, role: role.toUpperCase() };
+      const { name, email, password } = this.registerForm.value;
+      const newUser: User = { 
+        name, 
+        email, 
+        password, 
+        role: 'USER' 
+      };
   
       this.authService.register(newUser)
         .then(() => this.router.navigate(['/login']))
