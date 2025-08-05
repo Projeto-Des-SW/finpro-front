@@ -5,6 +5,7 @@ import { DashboardComponent } from "./dashboard/dashboard.component";
 import { IncomeListComponent } from "./income/income-list.component";
 import { authGuard } from "./auth/auth.guard";
 import { HomeComponent } from "./home/home.component"; 
+import { ExpenseComponent } from "./expense/expense.component";
 
 const routeConfig: Routes = [
      { 
@@ -28,8 +29,14 @@ const routeConfig: Routes = [
         title: 'Receitas - FinPro',
         canActivate: [authGuard]
     },
-    { 
-        path: 'dashboard',           
+    {
+        path: 'despesas',
+        component: ExpenseComponent,
+        title: 'Despesas - FinPro',
+        canActivate: [authGuard]
+    },
+    {
+        path: 'dashboard',
         component: DashboardComponent,
         title: 'Dashboard',
         canActivate: [authGuard]     
