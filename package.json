@@ -7,8 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:finpro-front": "node dist/finpro-front/server/server.mjs",
-    "lint": "ng lint"
+    "serve:ssr:finpro-front": "node dist/finpro-front/server/server.mjs"
   },
   "prettier": {
     "overrides": [
@@ -44,15 +43,12 @@
     "@types/jasmine": "~5.1.0",
     "@types/jwt-decode": "^2.2.1",
     "@types/node": "^20.17.19",
-    "angular-eslint": "20.1.1",
-    "eslint": "^9.29.0",
     "jasmine-core": "~5.7.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.8.2",
-    "typescript-eslint": "8.34.1"
+    "typescript": "~5.8.2"
   }
 }
