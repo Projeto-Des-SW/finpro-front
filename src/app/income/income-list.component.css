@@ -25,6 +25,7 @@
   color: #dc3545;
   background: #f8d7da;
   border-radius: 6px;
+  border: 1px solid #f5c6cb;
 }
 
 .empty-state {
@@ -64,10 +65,22 @@
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   transition: box-shadow 0.3s;
+  position: relative;
 }
 
 .income-card:hover {
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.income-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #007bff;
+  border-radius: 8px 0 0 8px;
 }
 
 .income-header {
@@ -93,11 +106,54 @@
 .income-details p {
   margin: 8px 0;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
+.income-details p strong {
+  min-width: 80px;
+  margin-right: 8px;
+}
+
+/* Badge de categoria */
+.category-badge {
+  background: #007bff;
+  color: white;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.category-badge.salary {
+  background: #28a745;
+}
+
+.category-badge.investment {
+  background: #17a2b8;
+}
+
+.category-badge.scholarship {
+  background: #ffc107;
+  color: #212529;
+}
+
+.category-badge.other {
+  background: #6c757d;
+}
+
+/* Estilo melhorado para observações */
 .observation {
-  font-style: italic;
-  color: #666;
+  background: #f8f9fa !important;
+  padding: 8px !important;
+  border-radius: 4px !important;
+  border-left: 3px solid #dee2e6 !important;
+  margin-top: 10px !important;
+  display: block !important;
 }
 
 .income-actions {
@@ -157,6 +213,7 @@
   cursor: not-allowed;
 }
 
+/* Responsive design */
 @media (max-width: 768px) {
   .income-container {
     padding: 10px;
@@ -174,5 +231,21 @@
 
   .income-actions {
     flex-direction: column;
+  }
+
+  .income-details p {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .income-details p strong {
+    min-width: auto;
+    margin-right: 0;
+    margin-bottom: 2px;
+  }
+  
+  .category-badge {
+    margin-left: 0;
+    margin-top: 2px;
   }
 }

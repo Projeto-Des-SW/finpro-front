@@ -1,9 +1,24 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IncomeFormComponent } from './income-form.component'; // Importar o componente de formulário
+import { IncomeFormComponent } from './income-form.component';
 import { IncomeService } from './income.service';
 import { Income } from '../entity/income';
+
+// Interface para a resposta da API que inclui informações da categoria
+interface IncomeResponse {
+  incomeId: number;
+  date: string;
+  amount: number;
+  paymentOrigin: string;
+  balanceSource: string;
+  observation?: string;
+  userId: number;
+  category?: {
+    incomeCategoryId: number;
+    name: string;
+  };
+}
 
 @Component({
   selector: 'app-income-list',
@@ -15,7 +30,7 @@ import { Income } from '../entity/income';
 export class IncomeListComponent implements OnInit {
   private incomeService = inject(IncomeService);
 
-  incomes: Income[] = [];
+  incomes: IncomeResponse[] = [];
   loading = false;
   errorMessage = '';
   
@@ -33,9 +48,16 @@ export class IncomeListComponent implements OnInit {
     this.errorMessage = '';
 
     try {
-      this.incomes = await this.incomeService.getAllIncomes();
+      console.log('🔍 Carregando receitas...');
+      const response = await this.incomeService.getAllIncomes();
+      
+      // A resposta da API já vem com as informações da categoria
+      this.incomes = response as IncomeResponse[];
+      
+      console.log('✅ Receitas carregadas:', this.incomes);
     } catch (error: any) {
-      this.errorMessage = error.message;
+      console.error('❌ Erro ao carregar receitas:', error);
+      this.errorMessage = error.message || 'Erro ao carregar receitas';
     } finally {
       this.loading = false;
     }
@@ -47,19 +69,34 @@ export class IncomeListComponent implements OnInit {
     this.showForm = true;
   }
 
-  editIncome(income: Income) {
+  editIncome(income: IncomeResponse) {
     this.isEditMode = true;
-    this.selectedIncome = income;
+    
+    // Converter IncomeResponse para Income para o formulário
+    this.selectedIncome = {
+      incomeId: income.incomeId,
+      date: income.date,
+      amount: income.amount,
+      paymentOrigin: income.paymentOrigin,
+      balanceSource: income.balanceSource,
+      observation: income.observation,
+      incomeCategoryId: income.category?.incomeCategoryId || 1,
+      userId: income.userId
+    };
+    
     this.showForm = true;
   }
 
   async deleteIncome(id: number) {
     if (confirm('Tem certeza que deseja excluir esta receita?')) {
       try {
+        console.log('🗑️ Deletando receita:', id);
         await this.incomeService.deleteIncome(id);
+        console.log('✅ Receita deletada com sucesso');
         await this.loadIncomes();
       } catch (error: any) {
-        this.errorMessage = error.message;
+        console.error('❌ Erro ao deletar receita:', error);
+        this.errorMessage = error.message || 'Erro ao deletar receita';
       }
     }
   }
@@ -81,5 +118,9 @@ export class IncomeListComponent implements OnInit {
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR');
+  }
+
+  getCategoryName(income: IncomeResponse): string {
+    return income.category?.name || 'Sem categoria';
   }
 }

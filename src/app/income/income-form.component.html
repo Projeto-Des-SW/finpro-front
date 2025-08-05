@@ -24,6 +24,40 @@
         </div>
       </div>
 
+      <!-- Campo de Categoria Dinâmico -->
+      <div class="form-group category-group">
+        <label for="categoryInput">Categoria</label>
+        <div class="category-input-container">
+          <input type="text" id="categoryInput" formControlName="categoryInput" class="form-control"
+            placeholder="Digite ou selecione uma categoria" (focus)="onCategoryInputFocus()"
+            (blur)="onCategoryInputBlur()" autocomplete="off" required>
+
+          <!-- Sugestões de categoria -->
+          <div class="category-suggestions" *ngIf="showSuggestions && filteredCategories.length > 0">
+            <div class="category-suggestion" *ngFor="let category of filteredCategories"
+              (click)="selectCategory(category)">
+              <span class="category-name">{{ category.name }}</span>
+              <span class="category-badge">Existente</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status da categoria -->
+        <div class="category-status" *ngIf="categoryStatus">
+          <span [ngClass]="{ 
+            'status-existing': categoryStatus.includes('existente') || categoryStatus.includes('encontrada'),
+            'status-creating': categoryStatus.includes('Criando'),
+            'status-new': categoryStatus.includes('será criada')
+          }">
+            {{ categoryStatus }}
+          </span>
+        </div>
+
+        <div class="error" *ngIf="incomeForm.get('categoryInput')?.invalid && incomeForm.get('categoryInput')?.touched">
+          Categoria é obrigatória
+        </div>
+      </div>
+
       <div class="form-group">
         <label for="paymentOrigin">Origem do Pagamento</label>
         <input type="text" id="paymentOrigin" formControlName="paymentOrigin" class="form-control"
@@ -49,21 +83,14 @@
         </textarea>
       </div>
 
-      <div class="form-group">
-        <label for="incomeCategoryId">ID da Categoria de Receita</label>
-        <input type="number" id="incomeCategoryId" formControlName="incomeCategoryId" class="form-control" required>
-        <div class="error"
-          *ngIf="incomeForm.get('incomeCategoryId')?.invalid && incomeForm.get('incomeCategoryId')?.touched">
-          ID da Categoria é obrigatório
-        </div>
-      </div>
-
       <div class="form-actions">
         <button type="button" class="btn btn-secondary" (click)="onCancel()">
           Cancelar
         </button>
         <button type="submit" class="btn btn-primary" [disabled]="incomeForm.invalid || loading">
-          {{ loading ? 'Salvando...' : (editMode ? 'Atualizar' : 'Criar') }}
+          <span *ngIf="loading && isCreatingCategory">Criando categoria...</span>
+          <span *ngIf="loading && !isCreatingCategory">Salvando...</span>
+          <span *ngIf="!loading">{{ editMode ? 'Atualizar' : 'Criar' }}</span>
         </button>
       </div>
 

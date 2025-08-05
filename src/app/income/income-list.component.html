@@ -14,6 +14,9 @@
   <!-- Error -->
   <div class="error" *ngIf="errorMessage">
     {{ errorMessage }}
+    <button class="btn btn-secondary" (click)="loadIncomes()" style="margin-left: 10px;">
+      Tentar novamente
+    </button>
   </div>
 
   <!-- Empty State -->
@@ -41,6 +44,9 @@
       </div>
 
       <div class="income-details">
+        <p><strong>Categoria:</strong>
+          <span class="category-badge">{{ getCategoryName(income) }}</span>
+        </p>
         <p><strong>Origem:</strong> {{ income.paymentOrigin }}</p>
         <p><strong>Destino:</strong> {{ income.balanceSource }}</p>
         <p *ngIf="income.observation" class="observation">
@@ -52,7 +58,7 @@
         <button class="btn btn-small btn-secondary" (click)="editIncome(income)">
           Editar
         </button>
-        <button class="btn btn-small btn-danger" (click)="deleteIncome(income.incomeId!)">
+        <button class="btn btn-small btn-danger" (click)="deleteIncome(income.incomeId)">
           Excluir
         </button>
       </div>
