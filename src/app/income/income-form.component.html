@@ -1,0 +1,75 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ editMode ? 'Editar Receita' : 'Nova Receita' }}</h3>
+      <button type="button" class="close-btn" (click)="onCancel()">×</button>
+    </div>
+
+    <form [formGroup]="incomeForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="date">Data</label>
+        <input type="date" id="date" formControlName="date" class="form-control" required>
+        <div class="error" *ngIf="incomeForm.get('date')?.invalid && incomeForm.get('date')?.touched">
+          Data é obrigatória
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="amount">Valor (R$)</label>
+        <input type="number" id="amount" formControlName="amount" class="form-control" placeholder="0,00" step="0.01"
+          min="0" required>
+        <div class="error" *ngIf="incomeForm.get('amount')?.invalid && incomeForm.get('amount')?.touched">
+          <span *ngIf="incomeForm.get('amount')?.hasError('required')">Valor é obrigatório</span>
+          <span *ngIf="incomeForm.get('amount')?.hasError('min')">Valor deve ser maior que zero</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="paymentOrigin">Origem do Pagamento</label>
+        <input type="text" id="paymentOrigin" formControlName="paymentOrigin" class="form-control"
+          placeholder="Ex: Salário, Freelance, Investimentos" required>
+        <div class="error" *ngIf="incomeForm.get('paymentOrigin')?.invalid && incomeForm.get('paymentOrigin')?.touched">
+          Origem do pagamento é obrigatória
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="balanceSource">Fonte do Saldo</label>
+        <input type="text" id="balanceSource" formControlName="balanceSource" class="form-control"
+          placeholder="Ex: Conta Corrente, Poupança, Carteira" required>
+        <div class="error" *ngIf="incomeForm.get('balanceSource')?.invalid && incomeForm.get('balanceSource')?.touched">
+          Fonte do saldo é obrigatória
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="observation">Observação</label>
+        <textarea id="observation" formControlName="observation" class="form-control"
+          placeholder="Observações adicionais (opcional)" rows="3">
+        </textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="incomeCategoryId">ID da Categoria de Receita</label>
+        <input type="number" id="incomeCategoryId" formControlName="incomeCategoryId" class="form-control" required>
+        <div class="error"
+          *ngIf="incomeForm.get('incomeCategoryId')?.invalid && incomeForm.get('incomeCategoryId')?.touched">
+          ID da Categoria é obrigatório
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="incomeForm.invalid || loading">
+          {{ loading ? 'Salvando...' : (editMode ? 'Atualizar' : 'Criar') }}
+        </button>
+      </div>
+
+      <div class="error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+    </form>
+  </div>
+</div>

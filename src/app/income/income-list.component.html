@@ -1,0 +1,66 @@
+<div class="income-container">
+  <div class="header">
+    <h2>Minhas Receitas</h2>
+    <button class="btn btn-primary" (click)="showCreateForm()">
+      + Nova Receita
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    <p>Carregando receitas...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="incomes.length === 0 && !loading && !errorMessage">
+    <h3>Nenhuma receita cadastrada</h3>
+    <p>Que tal adicionar sua primeira receita?</p>
+    <button class="btn btn-primary" (click)="showCreateForm()">
+      Criar primeira receita
+    </button>
+  </div>
+
+  <!-- Income List -->
+  <div class="income-grid" *ngIf="incomes.length > 0">
+    <!-- Summary -->
+    <div class="summary-card">
+      <h3>Total: R$ {{ getTotalAmount() | number:'1.2-2' }}</h3>
+      <p>{{ incomes.length }} receita(s)</p>
+    </div>
+
+    <!-- Income Cards -->
+    <div class="income-card" *ngFor="let income of incomes">
+      <div class="income-header">
+        <span class="income-date">{{ formatDate(income.date) }}</span>
+        <span class="income-amount">R$ {{ income.amount | number:'1.2-2' }}</span>
+      </div>
+
+      <div class="income-details">
+        <p><strong>Origem:</strong> {{ income.paymentOrigin }}</p>
+        <p><strong>Destino:</strong> {{ income.balanceSource }}</p>
+        <p *ngIf="income.observation" class="observation">
+          <strong>Obs:</strong> {{ income.observation }}
+        </p>
+      </div>
+
+      <div class="income-actions">
+        <button class="btn btn-small btn-secondary" (click)="editIncome(income)">
+          Editar
+        </button>
+        <button class="btn btn-small btn-danger" (click)="deleteIncome(income.incomeId!)">
+          Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Income Form Modal -->
+  <app-income-form *ngIf="showForm" [incomeToEdit]="selectedIncome" [editMode]="isEditMode"
+    (formSubmit)="onFormSubmit()" (formCancel)="onFormCancel()">
+  </app-income-form>
+</div>
