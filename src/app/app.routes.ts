@@ -6,6 +6,7 @@ import { IncomeListComponent } from "./income/income-list.component";
 import { authGuard } from "./auth/auth.guard";
 import { HomeComponent } from "./home/home.component"; 
 import { ExpenseComponent } from "./expense/expense.component";
+import { TransactionComponent } from "./transaction/transaction.component";
 
 const routeConfig: Routes = [
      { 
@@ -22,6 +23,12 @@ const routeConfig: Routes = [
         path: 'cadastro', 
         component: RegisterComponent, 
         title: 'Cadastro - FinPro' 
+    },
+    {
+        path: 'transacoes',
+        component: TransactionComponent,
+        title: 'Transações - FinPro',
+        canActivate: [authGuard]
     },
     {
         path: 'receitas',
