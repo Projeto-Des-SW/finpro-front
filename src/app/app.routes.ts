@@ -21,6 +21,12 @@ const routeConfig: Routes = [
         component: RegisterComponent, 
         title: 'Cadastro - FinPro' 
     },
+    // {
+    //     path: 'receitas',
+    //     component: IncomeListComponent,
+    //     title: 'Receitas - FinPro',
+    //     canActivate: [authGuard]
+    // },
     { 
         path: 'dashboard',           
         component: DashboardComponent,

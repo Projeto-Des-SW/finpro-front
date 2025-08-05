@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, firstValueFrom } from 'rxjs';
 import { User } from '../entity/user';
 import { jwtDecode } from 'jwt-decode';
@@ -19,6 +19,23 @@ interface LoginResponse {
   };
 }
 
+interface JwtPayload {
+  sub: string; // subject (email)
+  role: string;
+  exp: number; // expiration
+  iat: number; // issued at
+  email?: string;
+  name?: string;
+  id?: string;
+}
+
+interface ApiError {
+  error: string;
+  description: string;
+  detail?: string;
+  message?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -34,20 +51,25 @@ export class AuthService {
       console.log('Registro realizado com sucesso');
       return result;
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro no registro:', error);
       
-      if (error.error?.error === 'EMAIL_ALREADY_EXISTS') {
-        throw new Error('Este email já está cadastrado');
+      if (this.isHttpErrorResponse(error)) {
+        const apiError = error.error as ApiError;
+        
+        if (apiError?.error === 'EMAIL_ALREADY_EXISTS') {
+          throw new Error('Este email já está cadastrado');
+        }
+        
+        const errorMessage = apiError?.description || 
+                            apiError?.detail || 
+                            apiError?.message || 
+                            'Erro no cadastro';
+        
+        throw new Error(errorMessage);
       }
       
-      const errorMessage = error.error?.description || 
-                          error.error?.detail || 
-                          error.error?.message || 
-                          error.message || 
-                          'Erro no cadastro';
-      
-      throw new Error(errorMessage);
+      throw new Error('Erro no cadastro');
     }
   }
 
@@ -61,18 +83,23 @@ export class AuthService {
       console.log('Login realizado com sucesso');
       return true;
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro no login:', error);
       
-      if (error.status === 400 || error.status === 404) {
-        throw new Error('Email ou senha incorretos');
+      if (this.isHttpErrorResponse(error)) {
+        if (error.status === 400 || error.status === 404) {
+          throw new Error('Email ou senha incorretos');
+        }
+        
+        const apiError = error.error as ApiError;
+        const errorMessage = apiError?.description || 
+                            apiError?.message || 
+                            'Erro no login';
+        
+        throw new Error(errorMessage);
       }
       
-      const errorMessage = error.error?.description || 
-                          error.error?.message || 
-                          'Erro no login';
-      
-      throw new Error(errorMessage);
+      throw new Error('Erro no login');
     }
   }
   
@@ -81,7 +108,7 @@ export class AuthService {
     if (!token) return false;
     
     try {
-      const decodedToken: any = jwtDecode(token);
+      const decodedToken = jwtDecode<JwtPayload>(token);
       const currentTime = Date.now() / 1000;
       
       if (decodedToken.exp <= currentTime) {
@@ -108,7 +135,7 @@ export class AuthService {
     }
     
     try {
-      const decodedToken: any = jwtDecode(token);
+      const decodedToken = jwtDecode<JwtPayload>(token);
       return decodedToken.role === requiredRole;
     } catch (error) {
       console.error('Token error:', error);
@@ -134,7 +161,7 @@ export class AuthService {
       return '';
     }
     try {
-      const decodedToken: any = jwtDecode(token);
+      const decodedToken = jwtDecode<JwtPayload>(token);
       return decodedToken.sub || decodedToken.name || '';
     } catch (error) {
       console.error('Token error:', error);
@@ -148,7 +175,7 @@ export class AuthService {
       return '';
     }
     try {
-      const decodedToken: any = jwtDecode(token);
+      const decodedToken = jwtDecode<JwtPayload>(token);
       return decodedToken.email || '';
     } catch (error) {
       console.error('Token error:', error);
@@ -162,7 +189,7 @@ export class AuthService {
       return '';
     }
     try {
-      const decodedToken: any = jwtDecode(token);
+      const decodedToken = jwtDecode<JwtPayload>(token);
       return decodedToken.id || '';
     } catch (error) {
       console.error('Token error:', error);
@@ -172,11 +199,15 @@ export class AuthService {
 
   private isTokenValid(token: string): boolean {
     try {
-      const decodedToken: any = jwtDecode(token);
+      const decodedToken = jwtDecode<JwtPayload>(token);
       const currentTime = Date.now() / 1000;
       return decodedToken.exp > currentTime;
     } catch {
       return false;
     }
+  }
+
+  private isHttpErrorResponse(error: unknown): error is HttpErrorResponse {
+    return error instanceof HttpErrorResponse;
   }
 }
