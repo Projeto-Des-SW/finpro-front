@@ -1,0 +1,244 @@
+<div class="expense-container">
+  <header class="expense-header">
+    <h1>Transações</h1>
+    <button 
+      class="btn-new-transaction" 
+      (click)="toggleForm()"
+      [class.active]="showForm">
+      {{ showForm ? 'Cancelar' : '+ Nova transação' }}
+    </button>
+  </header>
+
+  <!-- Formulário de Nova Transação -->
+  <div class="form-container" [class.show]="showForm">
+    <h2>Nova Despesa</h2>
+    <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="date">Data</label>
+          <input 
+            type="date" 
+            id="date" 
+            formControlName="date" 
+            required>
+          <div class="error" *ngIf="expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched">
+            Data é obrigatória
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="amount">Valor</label>
+          <input 
+            type="number" 
+            id="amount" 
+            formControlName="amount" 
+            placeholder="0,00"
+            step="0.01"
+            required>
+          <div class="error" *ngIf="expenseForm.get('amount')?.invalid && expenseForm.get('amount')?.touched">
+            <span *ngIf="expenseForm.get('amount')?.hasError('required')">Valor é obrigatório</span>
+            <span *ngIf="expenseForm.get('amount')?.hasError('min')">Valor deve ser maior que zero</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group category-group">
+          <label for="category">Categoria *</label>
+          <div class="category-input-container">
+            <select 
+              id="category" 
+              formControlName="expenseCategoryId"
+              [disabled]="creatingNewCategory">
+              <option value="">Selecione uma categoria</option>
+              <option *ngFor="let category of categories" [value]="category.expenseCategoryId">
+                {{ category.name }}
+              </option>
+            </select>
+            <button 
+              type="button" 
+              class="btn-new-category"
+              (click)="toggleNewCategory()"
+              [class.active]="creatingNewCategory">
+              {{ creatingNewCategory ? 'Cancelar' : 'Nova' }}
+            </button>
+          </div>
+          
+          <!-- Erro para categoria existente -->
+          <div class="error" *ngIf="!creatingNewCategory && expenseForm.get('expenseCategoryId')?.invalid && expenseForm.get('expenseCategoryId')?.touched">
+            Selecione uma categoria
+          </div>
+          
+          <div class="new-category-input" *ngIf="creatingNewCategory">
+            <input 
+              type="text" 
+              placeholder="Nome da nova categoria"
+              formControlName="newCategoryName">
+            <div class="error" *ngIf="creatingNewCategory && expenseForm.get('newCategoryName')?.invalid && expenseForm.get('newCategoryName')?.touched">
+              Nome da categoria é obrigatório
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="paymentDestination">Destino do Pagamento</label>
+          <input 
+            type="text" 
+            id="paymentDestination" 
+            formControlName="paymentDestination"
+            placeholder="Ex: Supermercado, Restaurante"
+            required>
+          <div class="error" *ngIf="expenseForm.get('paymentDestination')?.invalid && expenseForm.get('paymentDestination')?.touched">
+            Destino do pagamento é obrigatório
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="balanceSource">Conta</label>
+          <input 
+            type="text" 
+            id="balanceSource" 
+            formControlName="balanceSource"
+            placeholder="Ex: Cartão de crédito, Conta corrente"
+            required>
+          <div class="error" *ngIf="expenseForm.get('balanceSource')?.invalid && expenseForm.get('balanceSource')?.touched">
+            Conta é obrigatória
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="observation">Observação</label>
+          <input 
+            type="text" 
+            id="observation" 
+            formControlName="observation"
+            placeholder="Observações (opcional)">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          type="submit" 
+          class="btn-submit"
+          [disabled]="expenseForm.invalid || loading">
+          {{ loading ? 'Salvando...' : 'Salvar Despesa' }}
+        </button>
+      </div>
+    </form>
+
+
+    <div class="error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-container">
+    <div class="tabs">
+      <button 
+        class="tab-button"
+        [class.active]="activeTab === 'todas'"
+        (click)="setActiveTab('todas')">
+        Todas
+      </button>
+      <button 
+        class="tab-button"
+        [class.active]="activeTab === 'receitas'"
+        (click)="setActiveTab('receitas')">
+        Receitas
+      </button>
+      <button 
+        class="tab-button"
+        [class.active]="activeTab === 'despesas'"
+        (click)="setActiveTab('despesas')">
+        Despesas
+      </button>
+    </div>
+
+    <div class="filter-title">
+      <h3>Filtrar transações</h3>
+    </div>
+
+    <div class="filter-controls">
+      <div class="filter-group">
+        <label>Período</label>
+        <select [(ngModel)]="filters.startDate" (ngModelChange)="updateFilter('period', $event)">
+          <option value="">Últimos 30 dias</option>
+          <option value="7">Últimos 7 dias</option>
+          <option value="30">Últimos 30 dias</option>
+          <option value="90">Últimos 90 dias</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Categoria</label>
+        <select [(ngModel)]="filters.category" (ngModelChange)="updateFilter('category', $event)">
+          <option value="">Todas</option>
+          <option *ngFor="let category of categories" [value]="category.name">
+            {{ category.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Conta</label>
+        <select [(ngModel)]="filters.account" (ngModelChange)="updateFilter('account', $event)">
+          <option value="">Todas</option>
+          <option *ngFor="let account of uniqueAccounts" [value]="account">
+            {{ account }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group search-group">
+        <label>Busca</label>
+        <input 
+          type="text" 
+          placeholder="Buscar transação"
+          [(ngModel)]="filters.searchTerm"
+          (ngModelChange)="updateFilter('searchTerm', $event)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de Transações -->
+  <div class="transactions-section">
+    <h3>Todas as transações</h3>
+    <p class="transactions-subtitle">Histórico das últimas transações</p>
+
+    <div class="transactions-table">
+      <div class="table-header">
+        <div class="header-cell">Descrição</div>
+        <div class="header-cell">Categoria</div>
+        <div class="header-cell">Data</div>
+        <div class="header-cell">Conta</div>
+        <div class="header-cell">Valor</div>
+        <div class="header-cell">Ações</div>
+      </div>
+
+      <div *ngIf="filteredExpenses.length === 0" class="no-transactions">
+        <p>Nenhuma transação encontrada</p>
+      </div>
+
+      <div 
+        *ngFor="let expense of filteredExpenses" 
+        class="table-row expense-row">
+        <div class="cell">
+          <div class="transaction-icon expense-icon">-</div>
+          {{ expense.paymentDestination }}
+        </div>
+        <div class="cell">{{ expense.category?.name || 'Sem categoria' }}</div>
+        <div class="cell">{{ formatDate(expense.date) }}</div>
+        <div class="cell">{{ expense.balanceSource }}</div>
+        <div class="cell expense-amount">-R$ {{ formatCurrency(expense.amount) }}</div>
+        <div class="cell actions">
+          <button class="btn-edit" (click)="editExpense(expense)">Editar</button>
+          <button class="btn-delete" (click)="deleteExpense(expense.expenseId)">Excluir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
