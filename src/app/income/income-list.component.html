@@ -1,17 +1,15 @@
 <div class="income-container">
-  <div class="header">
-    <h2>Minhas Receitas</h2>
-    <button class="btn btn-primary" (click)="showCreateForm()">
+  <header class="income-header">
+    <h1>Receitas</h1>
+    <button class="btn-new-transaction" (click)="showCreateForm()">
       + Nova Receita
     </button>
-  </div>
+  </header>
 
-  <!-- Loading -->
   <div class="loading" *ngIf="loading">
     <p>Carregando receitas...</p>
   </div>
 
-  <!-- Error -->
   <div class="error" *ngIf="errorMessage">
     {{ errorMessage }}
     <button class="btn btn-secondary" (click)="loadIncomes()" style="margin-left: 10px;">
@@ -19,53 +17,38 @@
     </button>
   </div>
 
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="incomes.length === 0 && !loading && !errorMessage">
-    <h3>Nenhuma receita cadastrada</h3>
-    <p>Que tal adicionar sua primeira receita?</p>
-    <button class="btn btn-primary" (click)="showCreateForm()">
-      Criar primeira receita
-    </button>
-  </div>
-
-  <!-- Income List -->
-  <div class="income-grid" *ngIf="incomes.length > 0">
-    <!-- Summary -->
-    <div class="summary-card">
-      <h3>Total: R$ {{ getTotalAmount() | number:'1.2-2' }}</h3>
-      <p>{{ incomes.length }} receita(s)</p>
-    </div>
-
-    <!-- Income Cards -->
-    <div class="income-card" *ngFor="let income of incomes">
-      <div class="income-header">
-        <span class="income-date">{{ formatDate(income.date) }}</span>
-        <span class="income-amount">R$ {{ income.amount | number:'1.2-2' }}</span>
+  <div class="incomes-section" *ngIf="incomes.length > 0">
+    <div class="incomes-table">
+      <div class="table-header">
+        <div class="header-cell">Origem do Pagamento</div>
+        <div class="header-cell">Categoria</div>
+        <div class="header-cell">Data</div>
+        <div class="header-cell">Conta</div>
+        <div class="header-cell">Valor</div>
+        <div class="header-cell">Ações</div>
       </div>
 
-      <div class="income-details">
-        <p><strong>Categoria:</strong>
-          <span class="category-badge">{{ getCategoryName(income) }}</span>
-        </p>
-        <p><strong>Origem:</strong> {{ income.paymentOrigin }}</p>
-        <p><strong>Destino:</strong> {{ income.balanceSource }}</p>
-        <p *ngIf="income.observation" class="observation">
-          <strong>Obs:</strong> {{ income.observation }}
-        </p>
-      </div>
-
-      <div class="income-actions">
-        <button class="btn btn-small btn-secondary" (click)="editIncome(income)">
-          Editar
-        </button>
-        <button class="btn btn-small btn-danger" (click)="deleteIncome(income.incomeId)">
-          Excluir
-        </button>
+      <div *ngFor="let income of incomes" class="table-row">
+        <div class="cell">
+          <div class="transaction-icon income-icon">+</div>
+          {{ income.paymentOrigin }}
+        </div>
+        <div class="cell">{{ getCategoryName(income) }}</div>
+        <div class="cell">{{ formatDate(income.date) }}</div>
+        <div class="cell">{{ income.balanceSource }}</div>
+        <div class="cell income-amount">+R$ {{ income.amount | number:'1.2-2' }}</div>
+        <div class="cell actions">
+          <button class="btn-edit" (click)="editIncome(income)">Editar</button>
+          <button class="btn-delete" (click)="deleteIncome(income.incomeId)">Excluir</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Income Form Modal -->
+  <div class="no-incomes" *ngIf="incomes.length === 0 && !loading && !errorMessage">
+    <p>Nenhuma receita encontrada</p>
+  </div>
+
   <app-income-form *ngIf="showForm" [incomeToEdit]="selectedIncome" [editMode]="isEditMode"
     (formSubmit)="onFormSubmit()" (formCancel)="onFormCancel()">
   </app-income-form>
