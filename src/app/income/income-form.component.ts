@@ -28,8 +28,8 @@ export class IncomeFormComponent implements OnInit {
     paymentOrigin: ['', Validators.required],
     balanceSource: ['', Validators.required],
     observation: [''],
-    categoryInput: ['', Validators.required], // Campo de input para categoria
-    selectedCategoryId: [null] // ID da categoria selecionada
+    categoryInput: ['', Validators.required], 
+    selectedCategoryId: [null] 
   });
 
   loading = false;
@@ -77,6 +77,8 @@ export class IncomeFormComponent implements OnInit {
           this.incomeForm.patchValue({ selectedCategoryId: null });
         }
       }
+
+     
     });
   }
 
