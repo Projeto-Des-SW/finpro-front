@@ -52,7 +52,7 @@
 }
 
 .form-container.show {
-  max-height: 1000px; /* Aumentado para acomodar toggle */
+  max-height: 1000px; /* Reduzido */
   opacity: 1;
   margin-bottom: 30px;
 }
@@ -63,33 +63,11 @@
   font-size: 24px;
 }
 
-/* =================== TOGGLE DE TIPO (NOVO) =================== */
-.transaction-type-selector {
-  margin-bottom: 25px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.type-toggle {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-}
-
-.type-option {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  padding: 10px 20px;
-  border: 2px solid #e9ecef;
-  border-radius: 25px;
-  transition: all 0.3s ease;
-  background: white;
-}
-
-.type-option:hover {
-  border-color: #2E3CB3;
-  background: #f8f9ff;
+/* NOVO: Estado desabilitado */
+.type-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f8f9fa;
 }
 
 .type-option input[type="radio"] {
@@ -100,17 +78,17 @@
   color: white;
 }
 
-.type-option:has(input[type="radio"]:checked) {
+.type-option:has(input[type="radio"]:checked):not(.disabled) {
   background: #2E3CB3;
   border-color: #2E3CB3;
 }
 
-.type-option:has(input[type="radio"]:checked).expense-type {
+.type-option:has(input[type="radio"]:checked).expense-type:not(.disabled) {
   background: #dc3545;
   border-color: #dc3545;
 }
 
-.type-option:has(input[type="radio"]:checked) .income-type {
+.type-option:has(input[type="radio"]:checked) .income-type:not(.disabled) {
   background: #28a745;
   border-color: #28a745;
 }
@@ -129,6 +107,8 @@
 .income-type {
   color: #28a745;
 }
+
+/* NOVO: Nota de tipo desabilitado - REMOVIDA */
 
 /* =================== CAMPOS DO FORMULÁRIO =================== */
 .form-row {
@@ -301,6 +281,8 @@
   background: #1e2a8a;
 }
 
+/* NOVO: Estilo do botão em modo edição - REMOVIDO */
+
 .btn-submit:disabled {
   background: #6c757d;
   cursor: not-allowed;
@@ -437,6 +419,8 @@
   background-color: #f8f9fa;
 }
 
+/* NOVO: Estilo para linha sendo editada - REMOVIDO */
+
 .cell {
   display: flex;
   align-items: center;
@@ -476,6 +460,8 @@
   font-weight: 600;
 }
 
+/* NOVO: Indicador de edição pequeno - REMOVIDO */
+
 /* =================== AÇÕES DA TABELA =================== */
 .actions {
   gap: 10px;
@@ -497,7 +483,7 @@
   color: white;
 }
 
-.btn-edit:hover {
+.btn-edit:hover:not(:disabled) {
   background: #138496;
 }
 
@@ -506,7 +492,7 @@
   color: white;
 }
 
-.btn-delete:hover {
+.btn-delete:hover:not(:disabled) {
   background: #c82333;
 }
 
@@ -571,7 +557,17 @@
   .category-suggestion {
     padding: 10px 12px;
   }
+
+  .edit-indicator {
+    padding: 12px;
+    flex-direction: column;
+  }
+
+  .edit-info {
+    font-size: 11px;
+  }
 }
+
 .success-message {
   background-color: #d4edda;
   color: #155724;

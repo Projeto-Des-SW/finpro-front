@@ -7,7 +7,7 @@ import { TransactionService } from './transaction.service';
 import { UnifiedTransaction, TransactionType } from '../entity/transaction';
 
 interface FilterOptions {
-search: any;
+  search: any;
   startDate: string;
   endDate: string;
   category: string;
@@ -52,6 +52,10 @@ export class TransactionComponent implements OnInit {
   isCreatingCategory = false;
   showCategorySuggestions = false;
   filteredCurrentCategories: any[] = [];
+
+  // NOVO: Estado de edição
+  isEditMode = false;
+  editingTransaction: UnifiedTransaction | null = null;
 
   filters: FilterOptions = {
     search: '',
@@ -222,7 +226,7 @@ export class TransactionComponent implements OnInit {
     this.showCategorySuggestions = false;
   }
 
-  // =================== SUBMIT (híbrido) ===================
+  // =================== SUBMIT (CORRIGIDO) ===================
 
   async onSubmit() {
     if (this.transactionForm.valid) {
@@ -236,7 +240,7 @@ export class TransactionComponent implements OnInit {
         // Se não há categoria selecionada, criar nova (lógica do income)
         if (!categoryId && formData.categoryInput?.trim()) {
           this.isCreatingCategory = true;
-          console.log(' Criando nova categoria:', formData.categoryInput);
+          console.log('🆕 Criando nova categoria:', formData.categoryInput);
           
           const newCategory = await this.transactionService.createCategory(
             this.transactionType,
@@ -250,7 +254,7 @@ export class TransactionComponent implements OnInit {
           // Atualizar lista de categorias
           await this.loadCategories();
           
-          console.log('Categoria obtida/criada com ID:', categoryId);
+          console.log('✅ Categoria obtida/criada com ID:', categoryId);
           this.isCreatingCategory = false;
         }
 
@@ -263,7 +267,20 @@ export class TransactionComponent implements OnInit {
 
         console.log('Dados da transação sendo enviados:', transactionData);
 
-        await this.transactionService.createTransaction(this.transactionType, transactionData);
+        // CORRIGIDO: Verificar se é edição ou criação
+        if (this.isEditMode && this.editingTransaction) {
+          // Atualizar transação existente
+          await this.transactionService.updateTransaction(
+            this.transactionType, 
+            this.editingTransaction.id, 
+            transactionData
+          );
+          console.log(`${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'} atualizada com sucesso`);
+        } else {
+          // Criar nova transação
+          await this.transactionService.createTransaction(this.transactionType, transactionData);
+          console.log(`${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'} criada com sucesso`);
+        }
         
         // Recarregar dados
         await this.loadAllTransactions();
@@ -273,8 +290,6 @@ export class TransactionComponent implements OnInit {
         // Reset do formulário
         this.resetForm();
         this.showForm = false;
-
-        console.log(`${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'} criada com sucesso`);
 
       } catch (error: any) {
         console.error('Erro ao salvar transação:', error);
@@ -321,6 +336,10 @@ export class TransactionComponent implements OnInit {
     this.isCreatingCategory = false;
     this.showCategorySuggestions = false;
     this.errorMessage = '';
+    
+    // NOVO: Reset do estado de edição
+    this.isEditMode = false;
+    this.editingTransaction = null;
     
     const today = new Date().toISOString().split('T')[0];
     this.transactionForm.patchValue({ date: today });
@@ -372,15 +391,15 @@ export class TransactionComponent implements OnInit {
     }
 
      // Filtro por período
-  if (this.filters.startDate && this.filters.endDate) {
-    const startDate = new Date(this.filters.startDate);
-    const endDate = new Date(this.filters.endDate);
-    
-    filtered = filtered.filter(t => {
-      const transactionDate = new Date(t.date);
-      return transactionDate >= startDate && transactionDate <= endDate;
-    });
-  }
+    if (this.filters.startDate && this.filters.endDate) {
+      const startDate = new Date(this.filters.startDate);
+      const endDate = new Date(this.filters.endDate);
+      
+      filtered = filtered.filter(t => {
+        const transactionDate = new Date(t.date);
+        return transactionDate >= startDate && transactionDate <= endDate;
+      });
+    }
 
     // Filtro por conta
     if (this.filters.account) {
@@ -402,7 +421,7 @@ export class TransactionComponent implements OnInit {
     this.filteredTransactions = filtered;
   }
 
-  // =================== AÇÕES (do Expense) ===================
+  // =================== AÇÕES (CORRIGIDAS) ===================
 
   async deleteTransaction(transaction: UnifiedTransaction) {
     if (confirm(`Tem certeza que deseja excluir esta ${transaction.type === 'INCOME' ? 'receita' : 'despesa'}?`)) {
@@ -418,31 +437,38 @@ export class TransactionComponent implements OnInit {
     }
   }
 
-editTransaction(transaction: UnifiedTransaction) {
-  this.showForm = true;
-  this.transactionType = transaction.type;
-  
-  // Preencher formulário com dados da transação
-  this.transactionForm.patchValue({
-    date: transaction.date.split('T')[0], // Formato YYYY-MM-DD
-    amount: transaction.amount,
-    categoryInput: transaction.category?.name || '',
-    destination: transaction.destination,
-    account: transaction.account,
-    observation: transaction.observation || ''
-  });
-
-  // Setar ID da categoria se existir
-  if (transaction.category) {
+  // CORRIGIDO: Método de edição
+  editTransaction(transaction: UnifiedTransaction) {
+    // Definir estado de edição
+    this.isEditMode = true;
+    this.editingTransaction = transaction;
+    this.transactionType = transaction.type;
+    
+    // Mostrar formulário
+    this.showForm = true;
+    
+    // Preencher formulário com dados da transação
     this.transactionForm.patchValue({
-      categoryId: transaction.category.id
+      date: transaction.date.split('T')[0], // Formato YYYY-MM-DD
+      amount: transaction.amount,
+      categoryInput: transaction.category?.name || '',
+      destination: transaction.destination,
+      account: transaction.account,
+      observation: transaction.observation || ''
     });
-  }
-  
-  // Atualizar status da categoria
-  this.updateFilteredCategories();
-}
 
+    // Setar ID da categoria se existir
+    if (transaction.category) {
+      this.transactionForm.patchValue({
+        categoryId: transaction.category.id
+      });
+    }
+    
+    // Atualizar categorias baseado no tipo
+    this.updateFilteredCategories();
+    
+    console.log('🔧 Modo de edição ativado para:', transaction);
+  }
 
   // =================== HELPERS (do Expense) ===================
 
@@ -485,5 +511,33 @@ editTransaction(transaction: UnifiedTransaction) {
     }
 
     return 'Nova categoria será criada';
+  }
+
+  // NOVO: Getter para mostrar modo de edição
+  get formTitle(): string {
+    if (this.isEditMode) {
+      return `Editar ${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'}`;
+    }
+    return 'Nova Transação';
+  }
+
+  get submitButtonText(): string {
+    if (this.loading && this.isCreatingCategory) {
+      return 'Criando categoria...';
+    }
+    if (this.loading && !this.isCreatingCategory) {
+      return this.isEditMode ? 'Atualizando...' : 'Salvando...';
+    }
+    if (this.isEditMode) {
+      return `Atualizar ${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'}`;
+    }
+    return `Salvar ${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'}`;
+  }
+
+  get toggleButtonText(): string {
+    if (this.isEditMode) {
+      return 'Cancelar Edição';
+    }
+    return this.showForm ? 'Cancelar' : '+ Nova transação';
   }
 }

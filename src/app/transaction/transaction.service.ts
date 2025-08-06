@@ -81,6 +81,22 @@ export class TransactionService {
     }
   }
 
+  // NOVO: Atualizar transação baseada no tipo
+  async updateTransaction(type: TransactionType, id: number, data: any): Promise<any> {
+    try {
+      console.log(`🔄 Atualizando ${type} com ID ${id}:`, data);
+      
+      if (type === 'EXPENSE') {
+        return await this.expenseService.updateExpense(id, data);
+      } else {
+        return await this.incomeService.updateIncome(id, data);
+      }
+    } catch (error) {
+      console.error(`❌ Erro ao atualizar ${type}:`, error);
+      throw error;
+    }
+  }
+
   // Criar categoria baseada no tipo
   async createCategory(type: TransactionType, name: string): Promise<any> {
     if (type === 'EXPENSE') {

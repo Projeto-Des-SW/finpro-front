@@ -4,33 +4,36 @@
     <button 
       class="btn-new-transaction" 
       (click)="toggleForm()"
-      [class.active]="showForm">
-      {{ showForm ? 'Cancelar' : '+ Nova transação' }}
+      [class.active]="showForm"
+      [class.edit-mode]="isEditMode">
+      {{ toggleButtonText }}
     </button>
   </header>
 
-  <!-- Formulário de Nova Transação -->
+  <!-- Formulário de Nova/Editar Transação -->
   <div class="form-container" [class.show]="showForm">
-    <h2>Nova Transação</h2>
+    <h2>{{ formTitle }}</h2>
     
     <!-- Toggle de Tipo de Transação -->
     <div class="transaction-type-selector">
       <div class="type-toggle">
-        <label class="type-option">
+        <label class="type-option" [class.disabled]="isEditMode">
           <input 
             type="radio" 
             name="transactionType" 
             value="EXPENSE"
             [checked]="transactionType === 'EXPENSE'"
+            [disabled]="isEditMode"
             (change)="onTransactionTypeChange('EXPENSE')">
           <span class="type-label expense-type">Despesa</span>
         </label>
-        <label class="type-option">
+        <label class="type-option" [class.disabled]="isEditMode">
           <input 
             type="radio" 
             name="transactionType" 
             value="INCOME"
             [checked]="transactionType === 'INCOME'"
+            [disabled]="isEditMode"
             (change)="onTransactionTypeChange('INCOME')">
           <span class="type-label income-type">Receita</span>
         </label>
@@ -157,11 +160,7 @@
           type="submit" 
           class="btn-submit"
           [disabled]="transactionForm.invalid || loading">
-          <span *ngIf="loading && isCreatingCategory">Criando categoria...</span>
-          <span *ngIf="loading && !isCreatingCategory">Salvando...</span>
-          <span *ngIf="!loading">
-            Salvar {{ transactionType === 'INCOME' ? 'Receita' : 'Despesa' }}
-          </span>
+          {{ submitButtonText }}
         </button>
       </div>
     </form>
@@ -230,58 +229,66 @@
         </select>
       </div>
 
-<div class="filter-group search-group">
-  <label>Busca</label>
-  <input 
-    type="text" 
-    placeholder="Buscar por descrição, conta ou observação"
-    [(ngModel)]="filters.searchTerm"
-    (ngModelChange)="updateFilter('searchTerm', $event)">
-</div>
-</div> <!-- fecha filter-controls -->
-</div> <!-- fecha filters-container -->
-
-<!-- Lista de transações renderizada -->
-<div class="transactions-section">
-  <h3>Transações</h3>
-  <div class="transactions-subtitle">
-    {{ filteredTransactions.length }} transações encontradas
+      <div class="filter-group search-group">
+        <label>Busca</label>
+        <input 
+          type="text" 
+          placeholder="Buscar por descrição, conta ou observação"
+          [(ngModel)]="filters.searchTerm"
+          (ngModelChange)="updateFilter('searchTerm', $event)">
+      </div>
+    </div>
   </div>
 
-  <div class="transactions-table">
-    <div class="table-header">
-      <div class="header-cell">Descrição</div>
-      <div class="header-cell">Categoria</div>
-      <div class="header-cell">Conta</div>
-      <div class="header-cell">Data</div>
-      <div class="header-cell">Valor</div>
-      <div class="header-cell">Ações</div>
+  <!-- Lista de transações renderizada -->
+  <div class="transactions-section">
+    <h3>Transações</h3>
+    <div class="transactions-subtitle">
+      {{ filteredTransactions.length }} transações encontradas
     </div>
 
-    <div *ngIf="filteredTransactions.length === 0" class="no-transactions">
-      <p>Nenhuma transação encontrada.</p>
-    </div>
+    <div class="transactions-table">
+      <div class="table-header">
+        <div class="header-cell">Descrição</div>
+        <div class="header-cell">Categoria</div>
+        <div class="header-cell">Conta</div>
+        <div class="header-cell">Data</div>
+        <div class="header-cell">Valor</div>
+        <div class="header-cell">Ações</div>
+      </div>
 
-    <div class="table-row" *ngFor="let transaction of filteredTransactions">
-      <div class="cell">
-        <div class="transaction-icon" 
-             [class.income-icon]="transaction.type === 'INCOME'" 
-             [class.expense-icon]="transaction.type === 'EXPENSE'">
-          {{ transaction.type === 'INCOME' ? 'R' : 'D' }}
+      <div *ngIf="filteredTransactions.length === 0" class="no-transactions">
+        <p>Nenhuma transação encontrada.</p>
+      </div>
+
+      <div class="table-row" 
+           *ngFor="let transaction of filteredTransactions">
+        <div class="cell">
+          <div class="transaction-icon" 
+               [class.income-icon]="transaction.type === 'INCOME'" 
+               [class.expense-icon]="transaction.type === 'EXPENSE'">
+            {{ transaction.type === 'INCOME' ? 'R' : 'D' }}
+          </div>
+          {{ transaction.destination }}
         </div>
-        {{ transaction.destination }}
-      </div>
-      <div class="cell">{{ transaction.category?.name || '-' }}</div>
-      <div class="cell">{{ transaction.account }}</div>
-      <div class="cell">{{ formatDate(transaction.date) }}</div>
-      <div class="cell" 
-           [class.income-amount]="transaction.type === 'INCOME'" 
-           [class.expense-amount]="transaction.type === 'EXPENSE'">
-        {{ transaction.amount | currency:'BRL' }}
-      </div>
-      <div class="cell actions">
-        <button class="btn-edit" (click)="editTransaction(transaction)">Editar</button>
-        <button class="btn-delete" (click)="deleteTransaction(transaction)">Excluir</button>
+        <div class="cell">{{ transaction.category?.name || '-' }}</div>
+        <div class="cell">{{ transaction.account }}</div>
+        <div class="cell">{{ formatDate(transaction.date) }}</div>
+        <div class="cell" 
+             [class.income-amount]="transaction.type === 'INCOME'" 
+             [class.expense-amount]="transaction.type === 'EXPENSE'">
+          {{ transaction.amount | currency:'BRL' }}
+        </div>
+        <div class="cell actions">
+          <button class="btn-edit" 
+                  (click)="editTransaction(transaction)">
+            Editar
+          </button>
+          <button class="btn-delete" 
+                  (click)="deleteTransaction(transaction)">
+            Excluir
+          </button>
+        </div>
       </div>
     </div>
   </div>
