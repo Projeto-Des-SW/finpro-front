@@ -48,15 +48,15 @@ export class IncomeListComponent implements OnInit {
     this.errorMessage = '';
 
     try {
-      console.log('🔍 Carregando receitas...');
+      console.log('Carregando receitas...');
       const response = await this.incomeService.getAllIncomes();
       
       // A resposta da API já vem com as informações da categoria
       this.incomes = response as IncomeResponse[];
       
-      console.log('✅ Receitas carregadas:', this.incomes);
+      console.log('Receitas carregadas:', this.incomes);
     } catch (error: any) {
-      console.error('❌ Erro ao carregar receitas:', error);
+      console.error('Erro ao carregar receitas:', error);
       this.errorMessage = error.message || 'Erro ao carregar receitas';
     } finally {
       this.loading = false;
@@ -72,7 +72,6 @@ export class IncomeListComponent implements OnInit {
   editIncome(income: IncomeResponse) {
     this.isEditMode = true;
     
-    // Converter IncomeResponse para Income para o formulário
     this.selectedIncome = {
       incomeId: income.incomeId,
       date: income.date,

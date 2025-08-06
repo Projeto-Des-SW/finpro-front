@@ -47,18 +47,18 @@ export class IncomeService {
 
   async getAllIncomes(): Promise<Income[]> {
     try {
-      console.log('🔍 Tentando buscar receitas...');
+      console.log('Tentando buscar receitas...');
       const token = localStorage.getItem('token');
-      console.log('🔑 Token no localStorage:', token ? 'Existe' : 'Não existe');
+      console.log('Token no localStorage:', token ? 'Existe' : 'Não existe');
       
       const response$ = this.http.get<Income[]>(this.apiUrl);
       const result = await firstValueFrom(response$);
       
-      console.log("✅ Receitas carregadas:", result);
+      console.log("Receitas carregadas:", result);
       return result;
       
     } catch (error) {
-      console.error('❌ Erro ao buscar receitas:', error);
+      console.error('Erro ao buscar receitas:', error);
       
       if (this.isHttpErrorResponse(error)) {
         console.log('📋 Status do erro:', error.status);

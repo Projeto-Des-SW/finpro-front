@@ -1,13 +1,58 @@
 <div class="dashboard-container">
   <header class="dashboard-header">
-    <div class="header-content">
-      <h1>FinPro Dashboard</h1>
+    <h1>Dashboard</h1>
+
+    <div class="header-actions">
+      <button class="btn-new-transaction">
+        <a routerLink="/transacoes">+ Nova Transação</a>
+      </button>
     </div>
   </header>
 
-  <section class="empty-state">
-    <div class="empty-content">
-      <h2>Nada por aqui ainda</h2>
+  <div class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+    <button (click)="refreshData()">Tentar novamente</button>
+  </div>
+
+  <section class="stats-section" *ngIf="!loading">
+    <div class="stats-grid">
+      <!-- Receitas -->
+      <div class="stat-card income-card" routerLink="/receitas">
+
+        <div class="stat-content">
+          <h3>Receitas</h3>
+          <p class="stat-value positive">{{ formatCurrency(stats.totalIncomes) }}</p>
+          <span class="stat-label">Total recebido</span>
+        </div>
+
+        <img class="stat-icon" src="/assets/receitas.svg" alt="">
+      </div>
+
+      <!-- Despesas -->
+      <div class="stat-card expense-card" routerLink="/despesas">
+
+        <div class="stat-content">
+          <h3>Despesas</h3>
+          <p class="stat-value negative">{{ formatCurrency(stats.totalExpenses) }}</p>
+          <span class="stat-label">Total gasto</span>
+        </div>
+
+        <img class="stat-icon" src="/assets/despesas.svg" alt="">
+      </div>
+
+
+      <!-- Transações -->
+      <div class="stat-card transaction-card" routerLink="/transacoes">
+
+        <div class="stat-content">
+          <h3>Transações</h3>
+          <p class="stat-value">{{ stats.transactionCount }}</p>
+          <span class="stat-label">Total de transações</span>
+        </div>
+
+        <img class="stat-icon" src="/assets/carteira.svg" alt="">
+      </div>
     </div>
   </section>
+
 </div>

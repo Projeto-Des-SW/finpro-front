@@ -28,22 +28,22 @@ button {
 }
 
 h1 { 
-    font-weight: 900; 
-    font-family: 'Rubik', sans-serif !important;
-}
-
-h2 { 
-    font-weight: 800; 
-    font-family: 'Rubik', sans-serif !important;
-}
-
-h3 { 
     font-weight: 700; 
     font-family: 'Rubik', sans-serif !important;
 }
 
+h2 { 
+    font-weight: 500; 
+    font-family: 'Rubik', sans-serif !important;
+}
+
+h3 { 
+    font-weight: 400; 
+    font-family: 'Rubik', sans-serif !important;
+}
+
 h4 { 
-    font-weight: 600; 
+    font-weight: 500; 
     font-family: 'Rubik', sans-serif !important;
 }
 
