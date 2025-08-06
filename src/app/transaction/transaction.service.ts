@@ -14,54 +14,57 @@ export class TransactionService {
   private incomeCategoryService = inject(IncomeCategoryService);
 
   // Buscar todas as transações unificadas
-  async getAllTransactions(): Promise<UnifiedTransaction[]> {
-    try {
-      const [expenses, incomes] = await Promise.all([
-        this.expenseService.getAllExpenses(),
-        this.incomeService.getAllIncomes()
-      ]);
+async getAllTransactions(): Promise<UnifiedTransaction[]> {
+  try {
+    const [expenses, incomes] = await Promise.all([
+      this.expenseService.getAllExpenses(),
+      this.incomeService.getAllIncomes()
+    ]);
 
-      // Converter despesas para formato unificado
-      const unifiedExpenses: UnifiedTransaction[] = expenses.map(expense => ({
-        id: expense.expenseId,
-        type: 'EXPENSE' as const,
-        date: expense.date,
-        amount: expense.amount,
-        category: expense.category ? {
-          id: expense.category.expenseCategoryId,
-          name: expense.category.name
-        } : null,
-        destination: expense.paymentDestination,
-        account: expense.balanceSource,
-        observation: expense.observation,
-        userId: expense.userId
-      }));
+    // Converter despesas para formato unificado
+    const unifiedExpenses: UnifiedTransaction[] = expenses.map(expense => ({
+      id: expense.expenseId,
+      type: 'EXPENSE' as const,
+      date: expense.date,
+      amount: expense.amount,
+      category: expense.category ? {
+        id: expense.category.expenseCategoryId,
+        name: expense.category.name
+      } : null,
+      destination: expense.paymentDestination,
+      account: expense.balanceSource,
+      observation: expense.observation,
+      userId: expense.userId ?? 0 
+    }));
 
-      // Converter receitas para formato unificado
-      const unifiedIncomes: UnifiedTransaction[] = (incomes as any[]).map(income => ({
-        id: income.incomeId,
+    // Converter receitas para formato unificado
+    const unifiedIncomes: UnifiedTransaction[] = incomes.map(income => {
+      const categoryData = (income as any).category || (income as any).incomeCategory;
+      
+      return {
+        id: income.incomeId as number,
         type: 'INCOME' as const,
         date: income.date,
         amount: income.amount,
-        category: income.category ? {
-          id: income.category.incomeCategoryId,
-          name: income.category.name
+        category: categoryData ? {
+          id: categoryData.incomeCategoryId || categoryData.id,
+          name: categoryData.name
         } : null,
         destination: income.paymentOrigin,
         account: income.balanceSource,
         observation: income.observation,
-        userId: income.userId
-      }));
+        userId: income.userId ?? 0 
+      };
+    });
 
-      // Unificar e ordenar por data (mais recente primeiro)
-      return [...unifiedExpenses, ...unifiedIncomes]
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    } catch (error) {
-      console.error('Erro ao buscar transações:', error);
-      throw error;
-    }
+    // Unificar e ordenar por data
+    return [...unifiedExpenses, ...unifiedIncomes]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  } catch (error) {
+    console.error('Erro ao buscar transações:', error);
+    throw error;
   }
+}
 
   // Buscar categorias por tipo
   async getCategoriesByType(type: TransactionType): Promise<any[]> {
@@ -78,6 +81,22 @@ export class TransactionService {
       return await this.expenseService.createExpense(data);
     } else {
       return await this.incomeService.createIncome(data);
+    }
+  }
+
+  // NOVO: Atualizar transação baseada no tipo
+  async updateTransaction(type: TransactionType, id: number, data: any): Promise<any> {
+    try {
+      console.log(`🔄 Atualizando ${type} com ID ${id}:`, data);
+      
+      if (type === 'EXPENSE') {
+        return await this.expenseService.updateExpense(id, data);
+      } else {
+        return await this.incomeService.updateIncome(id, data);
+      }
+    } catch (error) {
+      console.error(`❌ Erro ao atualizar ${type}:`, error);
+      throw error;
     }
   }
 
