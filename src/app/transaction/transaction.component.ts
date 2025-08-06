@@ -7,12 +7,13 @@ import { TransactionService } from './transaction.service';
 import { UnifiedTransaction, TransactionType } from '../entity/transaction';
 
 interface FilterOptions {
-  search: any;
   startDate: string;
   endDate: string;
   category: string;
   account: string;
   searchTerm: string;
+  periodDays: number | null; // Para períodos predefinidos
+  customPeriod: boolean; // Para saber se é período customizado
 }
 
 @Component({
@@ -58,12 +59,13 @@ export class TransactionComponent implements OnInit {
   editingTransaction: UnifiedTransaction | null = null;
 
   filters: FilterOptions = {
-    search: '',
     startDate: '',
     endDate: '',
     category: '',
     account: '',
-    searchTerm: ''  
+    searchTerm: '',
+    periodDays: 30, // Padrão: últimos 30 dias
+    customPeriod: false
   };
 
   // Formulário unificado 
@@ -95,11 +97,36 @@ export class TransactionComponent implements OnInit {
         this.loadCategories()
       ]);
       this.updateUniqueFilters();
+      
+      // Aplicar filtro inicial (últimos 30 dias)
+      this.initializeFilters();
       this.applyFilters();
     } catch (error: any) {
       console.error('Erro ao carregar dados:', error);
       this.errorMessage = error.message || 'Erro ao carregar dados';
     }
+  }
+
+  initializeFilters() {
+    // Define o período padrão como últimos 30 dias
+    this.filters.periodDays = 30;
+    this.filters.customPeriod = false;
+    console.log('🔧 Filtros inicializados:', this.filters);
+  }
+
+  clearFilters() {
+    console.log('🧹 Limpando todos os filtros');
+    this.filters = {
+      startDate: '',
+      endDate: '',
+      category: '',
+      account: '',
+      searchTerm: '',
+      periodDays: null, // Remove filtro de período
+      customPeriod: false
+    };
+    this.activeTab = 'todas';
+    this.applyFilters();
   }
 
   async loadAllTransactions() {
@@ -347,7 +374,7 @@ export class TransactionComponent implements OnInit {
     this.updateFilteredCategories();
   }
 
-  // =================== FILTROS (do Expense) ===================
+  // =================== FILTROS (CORRIGIDOS) ===================
 
   setActiveTab(tab: string) {
     this.activeTab = tab;
@@ -355,9 +382,21 @@ export class TransactionComponent implements OnInit {
   }
 
   updateFilter(filterType: string, value: any) {
+    console.log(`🔍 Atualizando filtro ${filterType}:`, value);
+    
     switch (filterType) {
       case 'period':
-        // Implementar lógica de período
+        this.onPeriodChange(value);
+        break;
+      case 'startDate':
+        this.filters.startDate = value;
+        this.filters.customPeriod = true;
+        this.filters.periodDays = null;
+        break;
+      case 'endDate':
+        this.filters.endDate = value;
+        this.filters.customPeriod = true;
+        this.filters.periodDays = null;
         break;
       case 'category':
         this.filters.category = value;
@@ -372,7 +411,33 @@ export class TransactionComponent implements OnInit {
     this.applyFilters();
   }
 
+  onPeriodChange(periodValue: string) {
+    console.log('📅 Mudança de período:', periodValue);
+    
+    if (periodValue === 'custom') {
+      this.filters.customPeriod = true;
+      this.filters.periodDays = null;
+      // Não limpa as datas para permitir seleção manual
+    } else if (periodValue === '') {
+      // "Últimos 30 dias" (padrão)
+      this.filters.customPeriod = false;
+      this.filters.periodDays = 30;
+      this.filters.startDate = '';
+      this.filters.endDate = '';
+    } else {
+      // Períodos predefinidos (7, 30, 90 dias)
+      const days = parseInt(periodValue);
+      this.filters.customPeriod = false;
+      this.filters.periodDays = days;
+      this.filters.startDate = '';
+      this.filters.endDate = '';
+    }
+    
+    console.log('🔍 Estado do filtro após mudança:', this.filters);
+  }
+
   applyFilters() {
+    console.log('🎯 Aplicando filtros:', this.filters);
     let filtered = [...this.allTransactions];
 
     // Filtro por tipo (abas)
@@ -381,24 +446,46 @@ export class TransactionComponent implements OnInit {
     } else if (this.activeTab === 'despesas') {
       filtered = filtered.filter(t => t.type === 'EXPENSE');
     }
-    // 'todas' mostra tudo
+
+    // CORRIGIDO: Filtro por período
+    if (this.filters.customPeriod) {
+      // Período customizado com datas específicas
+      if (this.filters.startDate && this.filters.endDate) {
+        const startDate = new Date(this.filters.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        
+        const endDate = new Date(this.filters.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        
+        console.log(`📅 Filtrando por período customizado: ${startDate.toLocaleDateString()} até ${endDate.toLocaleDateString()}`);
+        
+        filtered = filtered.filter(t => {
+          const transactionDate = new Date(t.date);
+          return transactionDate >= startDate && transactionDate <= endDate;
+        });
+      }
+    } else if (this.filters.periodDays) {
+      // Períodos predefinidos (últimos X dias)
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      
+      const startDate = new Date();
+      startDate.setDate(today.getDate() - this.filters.periodDays);
+      startDate.setHours(0, 0, 0, 0);
+      
+      console.log(`📅 Filtrando por últimos ${this.filters.periodDays} dias: ${startDate.toLocaleDateString()} até ${today.toLocaleDateString()}`);
+      
+      filtered = filtered.filter(t => {
+        const transactionDate = new Date(t.date);
+        return transactionDate >= startDate && transactionDate <= today;
+      });
+    }
 
     // Filtro por categoria
     if (this.filters.category) {
       filtered = filtered.filter(t => 
         t.category?.name === this.filters.category
       );
-    }
-
-     // Filtro por período
-    if (this.filters.startDate && this.filters.endDate) {
-      const startDate = new Date(this.filters.startDate);
-      const endDate = new Date(this.filters.endDate);
-      
-      filtered = filtered.filter(t => {
-        const transactionDate = new Date(t.date);
-        return transactionDate >= startDate && transactionDate <= endDate;
-      });
     }
 
     // Filtro por conta
@@ -418,6 +505,7 @@ export class TransactionComponent implements OnInit {
       );
     }
 
+    console.log(`📊 Resultado do filtro: ${filtered.length} de ${this.allTransactions.length} transações`);
     this.filteredTransactions = filtered;
   }
 
