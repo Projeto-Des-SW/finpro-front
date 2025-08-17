@@ -68,6 +68,13 @@ label {
     font-family: 'Rubik', sans-serif !important;
 }
 
+svg {
+  background: transparent !important;
+}
+img[src$=".svg"] {
+  background: transparent !important;
+}
+
 .mat-button, 
 .mat-raised-button, 
 .mat-icon-button,

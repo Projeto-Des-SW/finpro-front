@@ -31,7 +31,7 @@ export class ExpenseComponent implements OnInit {
   filteredExpenses: ExpenseResponse[] = [];
   categories: ExpenseCategory[] = [];
   uniqueAccounts: string[] = [];
-  
+
   showForm = false;
   loading = false;
   errorMessage = '';
@@ -175,19 +175,19 @@ export class ExpenseComponent implements OnInit {
     this.categoryError = '';
 
     try {
-      const newCategory = await this.expenseService.createCategory({ 
-        name: this.newCategoryName.trim() 
+      const newCategory = await this.expenseService.createCategory({
+        name: this.newCategoryName.trim()
       });
-      
+
       // Atualizar lista de categorias
       await this.loadCategories();
-      
+
       // Selecionar a nova categoria
       this.selectCategory(newCategory);
-      
+
       // Limpar input
       this.newCategoryName = '';
-      
+
     } catch (error: any) {
       console.error('Erro ao criar categoria:', error);
       this.categoryError = error.message || 'Erro ao criar categoria';
@@ -228,12 +228,12 @@ export class ExpenseComponent implements OnInit {
           await this.expenseService.createExpense(expenseData);
           console.log('Despesa criada com sucesso');
         }
-        
+
         // Recarrega os dados
         await this.loadExpenses();
         this.updateUniqueAccounts();
         this.applyFilters();
-        
+
         // Reset do formulário
         this.resetForm();
         this.showForm = false;
@@ -258,7 +258,7 @@ export class ExpenseComponent implements OnInit {
     this.newCategoryName = '';
     this.categoryError = '';
     this.showCategoryDropdown = false;
-    
+
     // Reset edição
     this.isEditing = false;
     this.editingExpenseId = null;
@@ -278,11 +278,11 @@ export class ExpenseComponent implements OnInit {
       account: '',
       searchTerm: ''
     };
-    
+
     // Resetar controles de período
     this.selectedPeriod = '';
     this.showCustomDateRange = false;
-    
+
     // Aplicar filtros (vai mostrar todas as transações)
     this.applyFilters();
   }
@@ -290,7 +290,7 @@ export class ExpenseComponent implements OnInit {
   onPeriodChange(period: string) {
     this.selectedPeriod = period;
     this.showCustomDateRange = period === 'custom';
-    
+
     if (period === '') {
       // Todas as transações - limpar filtros de data
       this.filters.startDate = '';
@@ -301,11 +301,11 @@ export class ExpenseComponent implements OnInit {
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - days);
-      
+
       this.filters.startDate = startDate.toISOString().split('T')[0];
       this.filters.endDate = endDate.toISOString().split('T')[0];
     }
-    
+
     this.applyFilters();
   }
 
@@ -349,14 +349,14 @@ export class ExpenseComponent implements OnInit {
 
     // Filtro por categoria
     if (this.filters.category) {
-      filtered = filtered.filter(expense => 
+      filtered = filtered.filter(expense =>
         expense.category?.name === this.filters.category
       );
     }
 
     // Filtro por conta
     if (this.filters.account) {
-      filtered = filtered.filter(expense => 
+      filtered = filtered.filter(expense =>
         expense.balanceSource === this.filters.account
       );
     }
@@ -440,36 +440,36 @@ export class ExpenseComponent implements OnInit {
     // Configurar modo de edição
     this.isEditing = true;
     this.editingExpenseId = expense.expenseId;
-    
+
     // Mostrar formulário
     this.showForm = true;
-    
+
     // Limpar erros
     this.errorMessage = '';
-    
+
     console.log('Editando despesa:', expense);
   }
 
-getCurrentDate(): string {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth() + 1; // Mês começa em 0
-  const day = today.getDate();
-  
-  return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-}
+  getCurrentDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1; // Mês começa em 0
+    const day = today.getDate();
 
-formatDate(dateString: string): string {
-  if (dateString.includes('T')) {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
   }
 
-  const [year, month, day] = dateString.split('-').map(Number);
-  const date = new Date(year, month - 1, day);
-  return date.toLocaleDateString('pt-BR');
-}
-  
-formatCurrency(amount: number): string {
+  formatDate(dateString: string): string {
+    if (dateString.includes('T')) {
+      return new Date(dateString).toLocaleDateString('pt-BR');
+    }
+
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('pt-BR');
+  }
+
+  formatCurrency(amount: number): string {
     return amount.toFixed(2).replace('.', ',');
   }
 }
