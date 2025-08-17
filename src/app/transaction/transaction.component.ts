@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,8 +12,6 @@ interface FilterOptions {
   category: string;
   account: string;
   searchTerm: string;
-  periodDays: number | null; // Para períodos predefinidos
-  customPeriod: boolean; // Para saber se é período customizado
 }
 
 @Component({
@@ -41,44 +39,58 @@ export class TransactionComponent implements OnInit {
   uniqueAccounts: string[] = [];
   uniqueCategories: string[] = [];
   
-  // Estado do formulário 
+  // Estado geral
   showForm = false;
   loading = false;
   errorMessage = '';
   activeTab = 'todas';
+  showCustomDateRange = false;
+  selectedPeriod = ''; // Default: Todas as transações
   
   // Estado do formulário 
   transactionType: TransactionType = 'EXPENSE';
-  creatingNewCategory = false;
-  isCreatingCategory = false;
-  showCategorySuggestions = false;
-  filteredCurrentCategories: any[] = [];
+  
+  // Estado de edição
+  isEditing = false;
+  editingTransactionId: number | null = null;
 
-  // NOVO: Estado de edição
-  isEditMode = false;
-  editingTransaction: UnifiedTransaction | null = null;
+  // Propriedades para o dropdown de categorias
+  showCategoryDropdown = false;
+  selectedCategoryName = '';
+  newCategoryName = '';
+  creatingCategory = false;
+  categoryError = '';
+
+  // Propriedades para o modal de transação
+  showTransactionModal = false;
+  selectedTransaction: UnifiedTransaction | null = null;
 
   filters: FilterOptions = {
     startDate: '',
     endDate: '',
     category: '',
     account: '',
-    searchTerm: '',
-    periodDays: 30, // Padrão: últimos 30 dias
-    customPeriod: false
+    searchTerm: ''
   };
 
-  // Formulário unificado 
+  // Formulário 
   transactionForm: FormGroup = this.fb.group({
     date: [this.getCurrentDate(), [Validators.required]],
     amount: ['', [Validators.required, Validators.min(0.01)]],
-    categoryId: [''],
-    categoryInput: ['', [Validators.required]], // Campo de input para categoria (do income)
-    newCategoryName: [''],
-    destination: ['', [Validators.required]], // paymentDestination ou paymentOrigin
-    account: ['', [Validators.required]], // balanceSource
+    categoryId: ['', [Validators.required]],
+    destination: ['', [Validators.required]],
+    account: ['', [Validators.required]],
     observation: ['']
   });
+
+  // Fechar dropdown ao clicar fora
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.category-dropdown')) {
+      this.showCategoryDropdown = false;
+    }
+  }
 
   ngOnInit() {
     if (!this.authService.isAuthenticated()) {
@@ -87,7 +99,13 @@ export class TransactionComponent implements OnInit {
     }
 
     this.loadData();
-    this.setupCategoryInputListener();
+    this.setDefaultDateRange();
+  }
+
+  private setDefaultDateRange() {
+    this.filters.startDate = '';
+    this.filters.endDate = '';
+    this.selectedPeriod = '';
   }
 
   async loadData() {
@@ -97,36 +115,11 @@ export class TransactionComponent implements OnInit {
         this.loadCategories()
       ]);
       this.updateUniqueFilters();
-      
-      // Aplicar filtro inicial (últimos 30 dias)
-      this.initializeFilters();
       this.applyFilters();
     } catch (error: any) {
       console.error('Erro ao carregar dados:', error);
       this.errorMessage = error.message || 'Erro ao carregar dados';
     }
-  }
-
-  initializeFilters() {
-    // Define o período padrão como últimos 30 dias
-    this.filters.periodDays = 30;
-    this.filters.customPeriod = false;
-    console.log('🔧 Filtros inicializados:', this.filters);
-  }
-
-  clearFilters() {
-    console.log('🧹 Limpando todos os filtros');
-    this.filters = {
-      startDate: '',
-      endDate: '',
-      category: '',
-      account: '',
-      searchTerm: '',
-      periodDays: null, // Remove filtro de período
-      customPeriod: false
-    };
-    this.activeTab = 'todas';
-    this.applyFilters();
   }
 
   async loadAllTransactions() {
@@ -138,7 +131,6 @@ export class TransactionComponent implements OnInit {
       this.transactionService.getCategoriesByType('EXPENSE'),
       this.transactionService.getCategoriesByType('INCOME')
     ]);
-    this.updateFilteredCategories();
   }
 
   updateUniqueFilters() {
@@ -155,68 +147,32 @@ export class TransactionComponent implements OnInit {
     }
   }
 
+  // NOVO: Método melhorado para mudança de tipo
   onTransactionTypeChange(type: TransactionType) {
+    if (this.isEditing) return; // Não permitir mudança durante edição
+    
     this.transactionType = type;
-    this.updateFilteredCategories();
     this.resetCategoryField();
-    this.updateFormLabels();
-  }
-
-  updateFormLabels() {
-    // Atualizar placeholders e labels dinamicamente baseado no tipo
-    const destinationControl = this.transactionForm.get('destination');
-    if (this.transactionType === 'INCOME') {
-      destinationControl?.setValue('');
-    } else {
-      destinationControl?.setValue('');
-    }
-  }
-
-  // =================== CATEGORIAS DINÂMICAS (do Income) ===================
-  
-  private setupCategoryInputListener() {
-    const categoryControl = this.transactionForm.get('categoryInput');
     
-    categoryControl?.valueChanges.subscribe(value => {
-      if (typeof value === 'string') {
-        this.filterCategories(value);
-        
-        // Resetar categoria selecionada se o usuário está digitando
-        if (this.transactionForm.get('categoryId')?.value) {
-          this.transactionForm.patchValue({ categoryId: null });
-        }
-      }
+    // Atualizar a validação do radio button
+    this.transactionForm.patchValue({
+      // Força a atualização do estado do formulário
     });
-  }
-
-  private filterCategories(searchTerm: string) {
-    if (!searchTerm.trim()) {
-      this.filteredCurrentCategories = this.getCurrentCategories();
-      this.showCategorySuggestions = false;
-      return;
-    }
-
-    this.filteredCurrentCategories = this.getCurrentCategories().filter(category =>
-      category.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
     
-    this.showCategorySuggestions = true;
+    console.log('🔄 Tipo de transação alterado para:', type);
   }
 
-  updateFilteredCategories() {
-    this.filteredCurrentCategories = this.getCurrentCategories();
-  }
-
+  // =================== CATEGORIAS DROPDOWN ===================
+  
   getCurrentCategories() {
     return this.transactionType === 'INCOME' 
       ? this.incomeCategories 
       : this.expenseCategories;
   }
 
-  getCurrentCategoryIdField() {
-    return this.transactionType === 'INCOME' 
-      ? 'incomeCategoryId' 
-      : 'expenseCategoryId';
+  toggleCategoryDropdown() {
+    this.showCategoryDropdown = !this.showCategoryDropdown;
+    this.categoryError = '';
   }
 
   selectCategory(category: any) {
@@ -224,36 +180,82 @@ export class TransactionComponent implements OnInit {
       ? category.incomeCategoryId 
       : category.expenseCategoryId;
       
-    this.transactionForm.patchValue({
-      categoryInput: category.name,
-      categoryId: categoryId
-    });
-    this.showCategorySuggestions = false;
+    this.transactionForm.get('categoryId')?.setValue(categoryId);
+    this.selectedCategoryName = category.name;
+    this.showCategoryDropdown = false;
+    this.categoryError = '';
+    
+    console.log('📁 Categoria selecionada:', category.name, 'ID:', categoryId);
   }
 
-  onCategoryInputFocus() {
-    if (this.filteredCurrentCategories.length > 0) {
-      this.showCategorySuggestions = true;
+  async createNewCategory() {
+    if (!this.newCategoryName || this.newCategoryName.trim().length === 0) {
+      this.categoryError = 'Nome da categoria é obrigatório';
+      return;
     }
-  }
 
-  onCategoryInputBlur() {
-    // Delay para permitir clique nas sugestões
-    setTimeout(() => {
-      this.showCategorySuggestions = false;
-    }, 200);
+    // Verificar se já existe categoria com este nome
+    const existingCategory = this.getCurrentCategories().find(
+      cat => cat.name.toLowerCase().trim() === this.newCategoryName.toLowerCase().trim()
+    );
+
+    if (existingCategory) {
+      this.categoryError = 'Já existe uma categoria com este nome';
+      return;
+    }
+
+    // Validar comprimento
+    if (this.newCategoryName.trim().length < 2) {
+      this.categoryError = 'Nome da categoria deve ter pelo menos 2 caracteres';
+      return;
+    }
+
+    if (this.newCategoryName.trim().length > 50) {
+      this.categoryError = 'Nome da categoria deve ter no máximo 50 caracteres';
+      return;
+    }
+
+    this.creatingCategory = true;
+    this.categoryError = '';
+
+    try {
+      console.log('🆕 Criando nova categoria:', this.newCategoryName.trim(), 'para tipo:', this.transactionType);
+      
+      const newCategory = await this.transactionService.createCategory(
+        this.transactionType,
+        this.newCategoryName.trim()
+      );
+      
+      // Atualizar lista de categorias
+      await this.loadCategories();
+      
+      // Selecionar a nova categoria
+      this.selectCategory(newCategory);
+      
+      // Limpar input
+      this.newCategoryName = '';
+      
+      console.log('✅ Nova categoria criada com sucesso:', newCategory);
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao criar categoria:', error);
+      this.categoryError = error.message || 'Erro ao criar categoria';
+    } finally {
+      this.creatingCategory = false;
+    }
   }
 
   resetCategoryField() {
     this.transactionForm.patchValue({
-      categoryInput: '',
-      categoryId: null
+      categoryId: ''
     });
-    this.creatingNewCategory = false;
-    this.showCategorySuggestions = false;
+    this.selectedCategoryName = '';
+    this.newCategoryName = '';
+    this.categoryError = '';
+    this.showCategoryDropdown = false;
   }
 
-  // =================== SUBMIT (CORRIGIDO) ===================
+  // =================== SUBMIT ===================
 
   async onSubmit() {
     if (this.transactionForm.valid) {
@@ -262,51 +264,35 @@ export class TransactionComponent implements OnInit {
 
       try {
         const formData = this.transactionForm.value;
-        let categoryId = formData.categoryId;
-
-        // Se não há categoria selecionada, criar nova (lógica do income)
-        if (!categoryId && formData.categoryInput?.trim()) {
-          this.isCreatingCategory = true;
-          console.log('🆕 Criando nova categoria:', formData.categoryInput);
-          
-          const newCategory = await this.transactionService.createCategory(
-            this.transactionType,
-            formData.categoryInput.trim()
-          );
-          
-          categoryId = this.transactionType === 'INCOME' 
-            ? newCategory.incomeCategoryId 
-            : newCategory.expenseCategoryId;
-          
-          // Atualizar lista de categorias
-          await this.loadCategories();
-          
-          console.log('✅ Categoria obtida/criada com ID:', categoryId);
-          this.isCreatingCategory = false;
-        }
+        const categoryId = formData.categoryId;
 
         if (!categoryId) {
-          throw new Error('Categoria é obrigatória');
+          this.errorMessage = 'Selecione uma categoria';
+          this.loading = false;
+          return;
         }
 
         // Preparar dados baseado no tipo
         const transactionData = this.prepareTransactionData(formData, categoryId);
 
-        console.log('Dados da transação sendo enviados:', transactionData);
+        console.log('💾 Salvando transação:', {
+          tipo: this.transactionType,
+          dados: transactionData,
+          edicao: this.isEditing
+        });
 
-        // CORRIGIDO: Verificar se é edição ou criação
-        if (this.isEditMode && this.editingTransaction) {
+        if (this.isEditing && this.editingTransactionId) {
           // Atualizar transação existente
           await this.transactionService.updateTransaction(
             this.transactionType, 
-            this.editingTransaction.id, 
+            this.editingTransactionId, 
             transactionData
           );
-          console.log(`${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'} atualizada com sucesso`);
+          console.log('✅ Transação atualizada com sucesso');
         } else {
           // Criar nova transação
           await this.transactionService.createTransaction(this.transactionType, transactionData);
-          console.log(`${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'} criada com sucesso`);
+          console.log('✅ Nova transação criada com sucesso');
         }
         
         // Recarregar dados
@@ -314,20 +300,20 @@ export class TransactionComponent implements OnInit {
         this.updateUniqueFilters();
         this.applyFilters();
         
-        // Reset do formulário
+        // Reset do formulário e fechar
         this.resetForm();
         this.showForm = false;
 
       } catch (error: any) {
-        console.error('Erro ao salvar transação:', error);
+        console.error('❌ Erro ao salvar transação:', error);
         this.errorMessage = error.message || 'Erro ao salvar transação';
-        this.isCreatingCategory = false;
       } finally {
         this.loading = false;
       }
     } else {
       this.transactionForm.markAllAsTouched();
       this.errorMessage = 'Por favor, preencha todos os campos obrigatórios';
+      console.log('⚠️ Formulário inválido:', this.transactionForm.errors);
     }
   }
 
@@ -359,45 +345,66 @@ export class TransactionComponent implements OnInit {
       date: this.getCurrentDate()
     });
     this.transactionType = 'EXPENSE';
-    this.creatingNewCategory = false;
-    this.isCreatingCategory = false;
-    this.showCategorySuggestions = false;
     this.errorMessage = '';
+    this.selectedCategoryName = '';
+    this.newCategoryName = '';
+    this.categoryError = '';
+    this.showCategoryDropdown = false;
     
-    // NOVO: Reset do estado de edição
-    this.isEditMode = false;
-    this.editingTransaction = null;
+    // Reset do estado de edição
+    this.isEditing = false;
+    this.editingTransactionId = null;
     
-    const today = new Date().toISOString().split('T')[0];
-    this.transactionForm.patchValue({ date: today });
-    
-    this.updateFilteredCategories();
+    console.log('🔄 Formulário resetado');
   }
 
-  // =================== FILTROS (CORRIGIDOS) ===================
+  // =================== FILTROS E ABAS ===================
 
   setActiveTab(tab: string) {
     this.activeTab = tab;
     this.applyFilters();
+    console.log('📋 Aba ativa alterada para:', tab);
+  }
+
+  clearAllFilters() {
+    this.filters = {
+      startDate: '',
+      endDate: '',
+      category: '',
+      account: '',
+      searchTerm: ''
+    };
+    
+    this.selectedPeriod = '';
+    this.showCustomDateRange = false;
+    this.applyFilters();
+    
+    console.log('🧹 Todos os filtros foram limpos');
+  }
+
+  onPeriodChange(period: string) {
+    this.selectedPeriod = period;
+    this.showCustomDateRange = period === 'custom';
+    
+    if (period === '') {
+      this.filters.startDate = '';
+      this.filters.endDate = '';
+    } else if (period !== 'custom') {
+      const days = parseInt(period);
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - days);
+      
+      this.filters.startDate = startDate.toISOString().split('T')[0];
+      this.filters.endDate = endDate.toISOString().split('T')[0];
+    }
+    
+    this.applyFilters();
+    console.log('📅 Período alterado:', period);
   }
 
   updateFilter(filterType: string, value: any) {
-    console.log(`🔍 Atualizando filtro ${filterType}:`, value);
-    
     switch (filterType) {
-      case 'period':
-        this.onPeriodChange(value);
-        break;
-      case 'startDate':
-        this.filters.startDate = value;
-        this.filters.customPeriod = true;
-        this.filters.periodDays = null;
-        break;
-      case 'endDate':
-        this.filters.endDate = value;
-        this.filters.customPeriod = true;
-        this.filters.periodDays = null;
-        break;
       case 'category':
         this.filters.category = value;
         break;
@@ -407,37 +414,17 @@ export class TransactionComponent implements OnInit {
       case 'searchTerm':
         this.filters.searchTerm = value;
         break;
+      case 'startDate':
+      case 'endDate':
+        if (this.selectedPeriod === 'custom') {
+          this.applyFilters();
+        }
+        break;
     }
     this.applyFilters();
   }
 
-  onPeriodChange(periodValue: string) {
-    console.log('📅 Mudança de período:', periodValue);
-    
-    if (periodValue === 'custom') {
-      this.filters.customPeriod = true;
-      this.filters.periodDays = null;
-      // Não limpa as datas para permitir seleção manual
-    } else if (periodValue === '') {
-      // "Últimos 30 dias" (padrão)
-      this.filters.customPeriod = false;
-      this.filters.periodDays = 30;
-      this.filters.startDate = '';
-      this.filters.endDate = '';
-    } else {
-      // Períodos predefinidos (7, 30, 90 dias)
-      const days = parseInt(periodValue);
-      this.filters.customPeriod = false;
-      this.filters.periodDays = days;
-      this.filters.startDate = '';
-      this.filters.endDate = '';
-    }
-    
-    console.log('🔍 Estado do filtro após mudança:', this.filters);
-  }
-
   applyFilters() {
-    console.log('🎯 Aplicando filtros:', this.filters);
     let filtered = [...this.allTransactions];
 
     // Filtro por tipo (abas)
@@ -447,37 +434,15 @@ export class TransactionComponent implements OnInit {
       filtered = filtered.filter(t => t.type === 'EXPENSE');
     }
 
-    // CORRIGIDO: Filtro por período
-    if (this.filters.customPeriod) {
-      // Período customizado com datas específicas
-      if (this.filters.startDate && this.filters.endDate) {
-        const startDate = new Date(this.filters.startDate);
-        startDate.setHours(0, 0, 0, 0);
-        
-        const endDate = new Date(this.filters.endDate);
-        endDate.setHours(23, 59, 59, 999);
-        
-        console.log(`📅 Filtrando por período customizado: ${startDate.toLocaleDateString()} até ${endDate.toLocaleDateString()}`);
-        
-        filtered = filtered.filter(t => {
-          const transactionDate = new Date(t.date);
-          return transactionDate >= startDate && transactionDate <= endDate;
-        });
-      }
-    } else if (this.filters.periodDays) {
-      // Períodos predefinidos (últimos X dias)
-      const today = new Date();
-      today.setHours(23, 59, 59, 999);
-      
-      const startDate = new Date();
-      startDate.setDate(today.getDate() - this.filters.periodDays);
-      startDate.setHours(0, 0, 0, 0);
-      
-      console.log(`📅 Filtrando por últimos ${this.filters.periodDays} dias: ${startDate.toLocaleDateString()} até ${today.toLocaleDateString()}`);
-      
-      filtered = filtered.filter(t => {
-        const transactionDate = new Date(t.date);
-        return transactionDate >= startDate && transactionDate <= today;
+    // Filtro por datas
+    if (this.filters.startDate && this.filters.endDate) {
+      const startDate = new Date(this.filters.startDate);
+      const endDate = new Date(this.filters.endDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      filtered = filtered.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        return transactionDate >= startDate && transactionDate <= endDate;
       });
     }
 
@@ -505,127 +470,103 @@ export class TransactionComponent implements OnInit {
       );
     }
 
-    console.log(`📊 Resultado do filtro: ${filtered.length} de ${this.allTransactions.length} transações`);
     this.filteredTransactions = filtered;
+    console.log(`🔍 Filtros aplicados: ${filtered.length} de ${this.allTransactions.length} transações`);
   }
 
-  // =================== AÇÕES (CORRIGIDAS) ===================
+  // =================== MODAL DE TRANSAÇÃO ===================
 
-  async deleteTransaction(transaction: UnifiedTransaction) {
-    if (confirm(`Tem certeza que deseja excluir esta ${transaction.type === 'INCOME' ? 'receita' : 'despesa'}?`)) {
+  openTransactionModal(transaction: UnifiedTransaction) {
+    this.selectedTransaction = transaction;
+    this.showTransactionModal = true;
+    console.log('📝 Modal aberto para transação:', transaction);
+  }
+
+  closeTransactionModal() {
+    this.showTransactionModal = false;
+    this.selectedTransaction = null;
+    console.log('❌ Modal fechado');
+  }
+
+  editTransactionFromModal() {
+    if (this.selectedTransaction) {
+      this.editTransaction(this.selectedTransaction);
+      this.closeTransactionModal();
+    }
+  }
+
+  async deleteTransactionFromModal() {
+    if (this.selectedTransaction && confirm(`Tem certeza que deseja excluir esta ${this.selectedTransaction.type === 'INCOME' ? 'receita' : 'despesa'}?`)) {
       try {
-        await this.transactionService.deleteTransaction(transaction.type, transaction.id);
+        console.log('🗑️ Excluindo transação:', this.selectedTransaction);
+        
+        await this.transactionService.deleteTransaction(this.selectedTransaction.type, this.selectedTransaction.id);
         await this.loadAllTransactions();
         this.updateUniqueFilters();
         this.applyFilters();
+        this.closeTransactionModal();
+        
+        console.log('✅ Transação excluída com sucesso');
       } catch (error: any) {
-        console.error('Erro ao deletar transação:', error);
+        console.error('❌ Erro ao deletar transação:', error);
         alert(error.message || 'Erro ao deletar transação');
       }
     }
   }
 
-  // CORRIGIDO: Método de edição
+  // =================== EDIÇÃO ===================
+
   editTransaction(transaction: UnifiedTransaction) {
-    // Definir estado de edição
-    this.isEditMode = true;
-    this.editingTransaction = transaction;
+    // Configurar modo de edição
+    this.isEditing = true;
+    this.editingTransactionId = transaction.id;
     this.transactionType = transaction.type;
     
     // Mostrar formulário
     this.showForm = true;
     
-    // Preencher formulário com dados da transação
+    // Preencher formulário
     this.transactionForm.patchValue({
-      date: transaction.date.split('T')[0], // Formato YYYY-MM-DD
+      date: transaction.date.split('T')[0],
       amount: transaction.amount,
-      categoryInput: transaction.category?.name || '',
       destination: transaction.destination,
       account: transaction.account,
       observation: transaction.observation || ''
     });
 
-    // Setar ID da categoria se existir
+    // Setar categoria se existir
     if (transaction.category) {
       this.transactionForm.patchValue({
         categoryId: transaction.category.id
       });
+      this.selectedCategoryName = transaction.category.name;
     }
-    
-    // Atualizar categorias baseado no tipo
-    this.updateFilteredCategories();
     
     console.log('🔧 Modo de edição ativado para:', transaction);
   }
 
-  // =================== HELPERS (do Expense) ===================
+  // =================== HELPERS ===================
 
   getCurrentDate(): string {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    
+    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
   }
 
-  formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('pt-BR');
+  formatDate(dateString: string): string {
+    if (dateString.includes('T')) {
+      return new Date(dateString).toLocaleDateString('pt-BR');
+    }
+
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('pt-BR');
   }
 
   formatCurrency(amount: number): string {
     return amount.toFixed(2).replace('.', ',');
-  }
-
-  // Status da categoria (do income)
-  get categoryStatus(): string {
-    const categoryInput = this.transactionForm.get('categoryInput')?.value;
-    const selectedCategoryId = this.transactionForm.get('categoryId')?.value;
-
-    if (!categoryInput?.trim()) {
-      return '';
-    }
-
-    if (selectedCategoryId) {
-      return 'Categoria existente selecionada';
-    }
-
-    if (this.isCreatingCategory) {
-      return 'Criando nova categoria...';
-    }
-
-    const existingCategory = this.getCurrentCategories().find(cat =>
-      cat.name.toLowerCase() === categoryInput.toLowerCase().trim()
-    );
-
-    if (existingCategory) {
-      return 'Categoria encontrada';
-    }
-
-    return 'Nova categoria será criada';
-  }
-
-  // NOVO: Getter para mostrar modo de edição
-  get formTitle(): string {
-    if (this.isEditMode) {
-      return `Editar ${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'}`;
-    }
-    return 'Nova Transação';
-  }
-
-  get submitButtonText(): string {
-    if (this.loading && this.isCreatingCategory) {
-      return 'Criando categoria...';
-    }
-    if (this.loading && !this.isCreatingCategory) {
-      return this.isEditMode ? 'Atualizando...' : 'Salvando...';
-    }
-    if (this.isEditMode) {
-      return `Atualizar ${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'}`;
-    }
-    return `Salvar ${this.transactionType === 'INCOME' ? 'Receita' : 'Despesa'}`;
-  }
-
-  get toggleButtonText(): string {
-    if (this.isEditMode) {
-      return 'Cancelar Edição';
-    }
-    return this.showForm ? 'Cancelar' : '+ Nova transação';
   }
 }
