@@ -1,7 +1,6 @@
 <div class="dashboard-container">
   <header class="dashboard-header">
     <h1>Dashboard</h1>
-
     <div class="header-actions">
       <button class="btn-new-transaction">
         <a routerLink="/transacoes">+ Nova Transação</a>
@@ -9,50 +8,186 @@
     </div>
   </header>
 
+  <!-- Error message -->
   <div class="error-message" *ngIf="errorMessage">
     {{ errorMessage }}
     <button (click)="refreshData()">Tentar novamente</button>
   </div>
 
+  <div class="loading-state" *ngIf="loading">
+    <p>Carregando dados do dashboard...</p>
+  </div>
+
   <section class="stats-section" *ngIf="!loading">
     <div class="stats-grid">
-      <!-- Receitas -->
-      <div class="stat-card income-card" routerLink="/receitas">
+      <div class="stat-card balance-card">
+        <div class="stat-content">
+          <h3>Saldo Total</h3>
+          <p class="stat-value" [class]="getBalanceStatus()">{{ formatCurrency(stats.balance) }}</p>
+        </div>
+        <img class="stat-icon" src="/assets/saldo.svg" alt="">
+      </div>
 
+      <div class="stat-card income-card" routerLink="/receitas">
         <div class="stat-content">
           <h3>Receitas</h3>
           <p class="stat-value positive">{{ formatCurrency(stats.totalIncomes) }}</p>
           <span class="stat-label">Total recebido</span>
         </div>
-
         <img class="stat-icon" src="/assets/receitas.svg" alt="">
       </div>
 
       <!-- Despesas -->
       <div class="stat-card expense-card" routerLink="/despesas">
-
         <div class="stat-content">
           <h3>Despesas</h3>
           <p class="stat-value negative">{{ formatCurrency(stats.totalExpenses) }}</p>
           <span class="stat-label">Total gasto</span>
         </div>
-
         <img class="stat-icon" src="/assets/despesas.svg" alt="">
       </div>
 
-
-      <!-- Transações -->
       <div class="stat-card transaction-card" routerLink="/transacoes">
-
         <div class="stat-content">
           <h3>Transações</h3>
           <p class="stat-value">{{ stats.transactionCount }}</p>
           <span class="stat-label">Total de transações</span>
         </div>
-
         <img class="stat-icon" src="/assets/carteira.svg" alt="">
       </div>
     </div>
   </section>
 
+  <section class="charts-section" *ngIf="!loading">
+
+    <div class="error-message" *ngIf="chartsError">
+      {{ chartsError }}
+      <button (click)="loadChartsData()">Tentar novamente</button>
+    </div>
+
+    <div class="charts-loading" *ngIf="chartsLoading">
+      <p>Carregando gráficos...</p>
+    </div>
+
+    <div class="charts-grid" *ngIf="!chartsLoading && !chartsError">
+
+      <div class="top-charts-row">
+        <div class="chart-card flow-chart">
+          <div class="chart-header">
+            <h2>Fluxo financeiro</h2>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <span class="legend-color despesas"></span>
+                <span>Despesas</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color receitas"></span>
+                <span>Receitas</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color saldo"></span>
+                <span>Saldo</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-container" *ngIf="chartData.length > 0">
+            <div class="chart-wrapper">
+              <div class="chart-y-axis">
+                <div class="y-axis-label" *ngFor="let label of getYAxisLabels()">{{ label }}</div>
+              </div>
+              <div class="chart-bars">
+                <div class="chart-month" *ngFor="let data of chartData">
+                  <div class="bars-container">
+                    <div class="bar-group">
+                      <!-- Barra de Despesas -->
+                      <div class="bar despesas-bar" [style.height.px]="(data.despesas / getMaxValue()) * 240"
+                        [title]="'Despesas: ' + formatCurrency(data.despesas)">
+                      </div>
+                      <!-- Barra de Receitas -->
+                      <div class="bar receitas-bar" [style.height.px]="(data.receitas / getMaxValue()) * 240"
+                        [title]="'Receitas: ' + formatCurrency(data.receitas)">
+                      </div>
+                      <!-- Barra de Saldo -->
+                      <div class="bar saldo-bar" [style.height.px]="getAbsoluteHeight(data.saldo)"
+                        [class.negative]="data.saldo < 0" [title]="'Saldo: ' + formatCurrency(data.saldo)">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="month-label">{{ data.month }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="no-data" *ngIf="chartData.length === 0">
+            <p>Nenhum dado disponível para o gráfico</p>
+          </div>
+        </div>
+
+        <div class="recent-transactions-card" (click)="goToTransactions()">
+          <div class="transactions-header">
+            <h3>Transações Recentes</h3>
+            <span class="view-all-indicator">→</span>
+          </div>
+          <p class="subtitle">Você realizou {{ stats.transactionCount }} transações este mês</p>
+
+          <div class="transactions-list" *ngIf="recentTransactions.length > 0">
+            <div class="transaction-item" *ngFor="let transaction of recentTransactions">
+              <div class="transaction-icon">
+                <img *ngIf="transaction.type === 'INCOME'" src="assets/up.svg" alt="Receita" class="icon-type">
+                <img *ngIf="transaction.type === 'EXPENSE'" src="assets/down.svg" alt="Despesa" class="icon-type">
+              </div>
+              <div class="transaction-details">
+                <div class="transaction-name">{{ transaction.description }}</div>
+                <div class="transaction-category">{{ transaction.category }} - {{ formatDate(transaction.date) }}</div>
+                <div class="transaction-account">{{ transaction.account }}</div>
+              </div>
+              <div class="transaction-amount" [class.positive]="transaction.type === 'INCOME'"
+                [class.negative]="transaction.type === 'EXPENSE'">
+                {{ transaction.type === 'INCOME' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="no-data" *ngIf="recentTransactions.length === 0">
+            <p>Nenhuma transação encontrada</p>
+          </div>
+
+          <div class="show-more" *ngIf="recentTransactions.length > 0">
+            <span>Clique para ver todas as transações</span>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="bottom-charts-row">
+        <div class="category-chart-card">
+          <h3>Gastos por categoria</h3>
+          <p class="subtitle">Distribuição de despesas por categoria no mês atual</p>
+
+          <div class="category-chart" *ngIf="categoryData.length > 0">
+            <div class="category-item" *ngFor="let category of categoryData">
+              <div class="category-info">
+                <span class="category-name">{{ category.name }}</span>
+                <div class="category-values">
+                  <span class="category-amount">{{ formatCurrency(category.value) }}</span>
+                  <span class="category-percentage">{{ category.percentage }}%</span>
+                </div>
+              </div>
+              <div class="category-bar">
+                <div class="category-progress" [style.width.%]="category.percentage"
+                  [style.background-color]="category.color">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="no-data" *ngIf="categoryData.length === 0">
+            <p>Nenhuma categoria de gastos encontrada</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
