@@ -1,11 +1,8 @@
 <div class="expense-container">
   <header class="expense-header">
     <h1>Despesas</h1>
-    <button 
-      class="btn-new-transaction" 
-      (click)="toggleForm()"
-      [class.active]="showForm">
-      
+    <button class="btn-new-transaction" (click)="toggleForm()" [class.active]="showForm">
+
       <ng-container *ngIf="!showForm">
         <img src="assets/mais.svg" alt="Adicionar">
         <span>Nova transação</span>
@@ -24,11 +21,7 @@
       <div class="form-row">
         <div class="form-group">
           <label for="date">Data</label>
-          <input 
-            type="date" 
-            id="date" 
-            formControlName="date" 
-            required>
+          <input type="date" id="date" formControlName="date" required>
           <div class="error" *ngIf="expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched">
             Data é obrigatória
           </div>
@@ -36,13 +29,7 @@
 
         <div class="form-group">
           <label for="amount">Valor</label>
-          <input 
-            type="number" 
-            id="amount" 
-            formControlName="amount" 
-            placeholder="0,00"
-            step="0.01"
-            required>
+          <input type="number" id="amount" formControlName="amount" placeholder="0,00" step="0.01" required>
           <div class="error" *ngIf="expenseForm.get('amount')?.invalid && expenseForm.get('amount')?.touched">
             <span *ngIf="expenseForm.get('amount')?.hasError('required')">Valor é obrigatório</span>
             <span *ngIf="expenseForm.get('amount')?.hasError('min')">Valor deve ser maior que zero</span>
@@ -56,39 +43,27 @@
           <div class="category-input-container">
             <div class="category-select-wrapper">
               <div class="category-dropdown">
-                <div 
-                  class="category-trigger"
-                  [class.open]="showCategoryDropdown"
+                <div class="category-trigger" [class.open]="showCategoryDropdown"
                   [class.error]="expenseForm.get('expenseCategoryId')?.invalid && expenseForm.get('expenseCategoryId')?.touched"
                   (click)="toggleCategoryDropdown()">
                   <span>{{ selectedCategoryName || 'Selecione uma categoria' }}</span>
-                  <svg class="dropdown-arrow" [class.open]="showCategoryDropdown" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 10l5 5 5-5z"/>
+                  <svg class="dropdown-arrow" [class.open]="showCategoryDropdown" viewBox="0 0 24 24"
+                    fill="currentColor">
+                    <path d="M7 10l5 5 5-5z" />
                   </svg>
                 </div>
-                
+
                 <div class="category-options" *ngIf="showCategoryDropdown">
-                  <div 
-                    class="category-option"
-                    *ngFor="let category of categories"
-                    (click)="selectCategory(category)">
+                  <div class="category-option" *ngFor="let category of categories" (click)="selectCategory(category)">
                     {{ category.name }}
                   </div>
-                  
+
                   <div class="new-category-section">
                     <div class="new-category-input">
-                      <input 
-                        type="text" 
-                        placeholder="Categoria Personalizada"
-                        [(ngModel)]="newCategoryName"
-                        [ngModelOptions]="{standalone: true}"
-                        (keyup.enter)="createNewCategory()"
-                        #newCategoryInput>
+                      <input type="text" placeholder="Categoria Personalizada" [(ngModel)]="newCategoryName"
+                        [ngModelOptions]="{standalone: true}" (keyup.enter)="createNewCategory()" #newCategoryInput>
                       <div class="new-category-actions">
-                        <button 
-                          type="button" 
-                          class="btn-save-category"
-                          (click)="createNewCategory()"
+                        <button type="button" class="btn-save-category" (click)="createNewCategory()"
                           [disabled]="!newCategoryName || newCategoryName.trim().length === 0 || creatingCategory">
                           {{ creatingCategory ? 'Salvando...' : 'Criar' }}
                         </button>
@@ -102,21 +77,19 @@
               </div>
             </div>
           </div>
-          
-          <div class="error" *ngIf="expenseForm.get('expenseCategoryId')?.invalid && expenseForm.get('expenseCategoryId')?.touched">
+
+          <div class="error"
+            *ngIf="expenseForm.get('expenseCategoryId')?.invalid && expenseForm.get('expenseCategoryId')?.touched">
             Selecione uma categoria
           </div>
         </div>
 
         <div class="form-group">
           <label for="paymentDestination">Destino do Pagamento</label>
-          <input 
-            type="text" 
-            id="paymentDestination" 
-            formControlName="paymentDestination"
-            placeholder="Ex: Supermercado, Restaurante"
-            required>
-          <div class="error" *ngIf="expenseForm.get('paymentDestination')?.invalid && expenseForm.get('paymentDestination')?.touched">
+          <input type="text" id="paymentDestination" formControlName="paymentDestination"
+            placeholder="Ex: Supermercado, Restaurante" required>
+          <div class="error"
+            *ngIf="expenseForm.get('paymentDestination')?.invalid && expenseForm.get('paymentDestination')?.touched">
             Destino do pagamento é obrigatório
           </div>
         </div>
@@ -125,33 +98,24 @@
       <div class="form-row">
         <div class="form-group">
           <label for="balanceSource">Conta</label>
-          <input 
-            type="text" 
-            id="balanceSource" 
-            formControlName="balanceSource"
-            placeholder="Ex: Cartão de crédito, Conta corrente"
-            required>
-          <div class="error" *ngIf="expenseForm.get('balanceSource')?.invalid && expenseForm.get('balanceSource')?.touched">
+          <input type="text" id="balanceSource" formControlName="balanceSource"
+            placeholder="Ex: Cartão de crédito, Conta corrente" required>
+          <div class="error"
+            *ngIf="expenseForm.get('balanceSource')?.invalid && expenseForm.get('balanceSource')?.touched">
             Conta é obrigatória
           </div>
         </div>
 
         <div class="form-group">
           <label for="observation">Observação</label>
-          <input 
-            type="text" 
-            id="observation" 
-            formControlName="observation"
-            placeholder="Observações (opcional)">
+          <input type="text" id="observation" formControlName="observation" placeholder="Observações (opcional)">
         </div>
       </div>
 
       <div class="form-actions">
-        <button 
-          type="submit" 
-          class="btn-submit"
-          [disabled]="expenseForm.invalid || loading">
-          {{ loading ? (isEditing ? 'Atualizando...' : 'Salvando...') : (isEditing ? 'Atualizar Despesa' : 'Salvar Despesa') }}
+        <button type="submit" class="btn-submit" [disabled]="expenseForm.invalid || loading">
+          {{ loading ? (isEditing ? 'Atualizando...' : 'Salvando...') : (isEditing ? 'Atualizar Despesa' : 'Salvar
+          Despesa') }}
         </button>
       </div>
     </form>
@@ -166,11 +130,7 @@
     <div class="filter-title">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h3>Filtrar despesas</h3>
-        <button 
-          type="button" 
-          class="btn-clear-filters"
-          (click)="clearAllFilters()"
-          title="Limpar todos os filtros">
+        <button type="button" class="btn-clear-filters" (click)="clearAllFilters()" title="Limpar todos os filtros">
           Limpar Filtros
         </button>
       </div>
@@ -191,17 +151,11 @@
       <!-- Controles de data personalizada -->
       <div *ngIf="showCustomDateRange" class="filter-group">
         <label>Data Início</label>
-        <input 
-          type="date" 
-          [(ngModel)]="filters.startDate"
-          (change)="updateFilter('startDate', filters.startDate)">
+        <input type="date" [(ngModel)]="filters.startDate" (change)="updateFilter('startDate', filters.startDate)">
       </div>
       <div *ngIf="showCustomDateRange" class="filter-group">
         <label>Data Fim</label>
-        <input 
-          type="date" 
-          [(ngModel)]="filters.endDate"
-          (change)="updateFilter('endDate', filters.endDate)">
+        <input type="date" [(ngModel)]="filters.endDate" (change)="updateFilter('endDate', filters.endDate)">
       </div>
 
       <div class="filter-group">
@@ -227,10 +181,7 @@
       <div class="filter-group search-group">
         <label>Busca</label>
         <div class="search-input-wrapper">
-          <input 
-            type="text" 
-            placeholder="Buscar transação"
-            [(ngModel)]="filters.searchTerm"
+          <input type="text" placeholder="Buscar transação" [(ngModel)]="filters.searchTerm"
             (ngModelChange)="updateFilter('searchTerm', $event)">
           <img src="assets/lupa.svg" alt="Buscar" class="search-icon">
         </div>
@@ -256,9 +207,7 @@
         <p>Nenhuma transação encontrada</p>
       </div>
 
-      <div 
-        *ngFor="let expense of filteredExpenses" 
-        class="table-row expense-row"
+      <div *ngFor="let expense of filteredExpenses" class="table-row expense-row"
         (click)="openTransactionModal(expense)">
         <div class="cell">
           <div class="transaction-icon">
@@ -283,39 +232,39 @@
           <span>&times;</span>
         </button>
       </div>
-      
+
       <div class="modal-body" *ngIf="selectedTransaction">
         <div class="detail-item">
           <span class="detail-label">Destino do pagamento</span>
           <span class="detail-value">{{ selectedTransaction.paymentDestination }}</span>
         </div>
-        
+
         <div class="detail-item">
           <span class="detail-label">Categoria</span>
           <span class="detail-value">{{ selectedTransaction.category?.name || 'Sem categoria' }}</span>
         </div>
-        
+
         <div class="detail-item">
           <span class="detail-label">Data</span>
           <span class="detail-value">{{ formatDate(selectedTransaction.date) }}</span>
         </div>
-        
+
         <div class="detail-item">
           <span class="detail-label">Conta</span>
           <span class="detail-value">{{ selectedTransaction.balanceSource }}</span>
         </div>
-        
+
         <div class="detail-item">
           <span class="detail-label">Valor</span>
           <span class="detail-value amount expense">R$ {{ formatCurrency(selectedTransaction.amount) }}</span>
         </div>
-        
+
         <div class="detail-item" *ngIf="selectedTransaction.observation">
           <span class="detail-label">Observação</span>
           <span class="detail-value">{{ selectedTransaction.observation }}</span>
         </div>
       </div>
-      
+
       <div class="modal-actions">
         <button class="btn-modal primary" (click)="editExpenseFromModal()">
           Editar
