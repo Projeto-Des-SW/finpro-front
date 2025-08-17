@@ -216,35 +216,37 @@ async getAllCategories(): Promise<ExpenseCategory[]> {
     }
   }
 
-  async createCategory(category: ExpenseCategory): Promise<ExpenseCategory> {
-    try {
-      const response$ = this.http.post<ExpenseCategory>(this.categoryApiUrl, category);
-      const result = await firstValueFrom(response$);
+async createCategory(category: ExpenseCategory): Promise<ExpenseCategory> {
+  try {
+    const response$ = this.http.post<ExpenseCategory>(this.categoryApiUrl, category);
+    const result = await firstValueFrom(response$);
+    return result;
+    
+  } catch (error) {
+    console.error('Erro ao criar categoria:', error);
+    
+    if (this.isHttpErrorResponse(error)) {
+      const apiError = error.error as ApiError;
       
-      console.log('Categoria criada com sucesso');
-      return result;
-      
-    } catch (error) {
-      console.error('Erro ao criar categoria:', error);
-      
-      if (this.isHttpErrorResponse(error)) {
-        const apiError = error.error as ApiError;
-        const errorMessage = apiError?.description || 
-                            apiError?.message || 
-                            'Erro ao criar categoria';
-        
-        throw new Error(errorMessage);
+      // Tratamento especial para erros de duplicação
+      if (error.status === 409) {
+        throw new Error('Já existe uma categoria com este nome');
       }
       
-      if (error instanceof Error) {
-        throw new Error(error.message);
-      }
+      const errorMessage = apiError?.description || 
+                          apiError?.message || 
+                          'Erro ao criar categoria';
       
-      throw new Error('Erro ao criar categoria');
+      throw new Error(errorMessage);
     }
+    
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    
+    throw new Error('Erro ao criar categoria');
   }
-
-
+}
   private isHttpErrorResponse(error: unknown): error is HttpErrorResponse {
     return error instanceof HttpErrorResponse;
   }

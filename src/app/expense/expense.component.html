@@ -1,17 +1,25 @@
 <div class="expense-container">
   <header class="expense-header">
-    <h1>Transações</h1>
+    <h1>Despesas</h1>
     <button 
       class="btn-new-transaction" 
       (click)="toggleForm()"
       [class.active]="showForm">
-      {{ showForm ? 'Cancelar' : '+ Nova transação' }}
+      
+      <ng-container *ngIf="!showForm">
+        <img src="assets/mais.svg" alt="Adicionar">
+        <span>Nova transação</span>
+      </ng-container>
+
+      <ng-container *ngIf="showForm">
+        <span>Cancelar</span>
+      </ng-container>
     </button>
   </header>
 
   <!-- Formulário de Nova Transação -->
   <div class="form-container" [class.show]="showForm">
-    <h2>Nova Despesa</h2>
+    <h2>{{ isEditing ? 'Editar Despesa' : 'Nova Despesa' }}</h2>
     <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
       <div class="form-row">
         <div class="form-group">
@@ -44,39 +52,59 @@
 
       <div class="form-row">
         <div class="form-group category-group">
-          <label for="category">Categoria *</label>
+          <label for="category">Categoria</label>
           <div class="category-input-container">
-            <select 
-              id="category" 
-              formControlName="expenseCategoryId"
-              [disabled]="creatingNewCategory">
-              <option value="">Selecione uma categoria</option>
-              <option *ngFor="let category of categories" [value]="category.expenseCategoryId">
-                {{ category.name }}
-              </option>
-            </select>
-            <button 
-              type="button" 
-              class="btn-new-category"
-              (click)="toggleNewCategory()"
-              [class.active]="creatingNewCategory">
-              {{ creatingNewCategory ? 'Cancelar' : 'Nova' }}
-            </button>
-          </div>
-          
-          <!-- Erro para categoria existente -->
-          <div class="error" *ngIf="!creatingNewCategory && expenseForm.get('expenseCategoryId')?.invalid && expenseForm.get('expenseCategoryId')?.touched">
-            Selecione uma categoria
-          </div>
-          
-          <div class="new-category-input" *ngIf="creatingNewCategory">
-            <input 
-              type="text" 
-              placeholder="Nome da nova categoria"
-              formControlName="newCategoryName">
-            <div class="error" *ngIf="creatingNewCategory && expenseForm.get('newCategoryName')?.invalid && expenseForm.get('newCategoryName')?.touched">
-              Nome da categoria é obrigatório
+            <div class="category-select-wrapper">
+              <div class="category-dropdown">
+                <div 
+                  class="category-trigger"
+                  [class.open]="showCategoryDropdown"
+                  [class.error]="expenseForm.get('expenseCategoryId')?.invalid && expenseForm.get('expenseCategoryId')?.touched"
+                  (click)="toggleCategoryDropdown()">
+                  <span>{{ selectedCategoryName || 'Selecione uma categoria' }}</span>
+                  <svg class="dropdown-arrow" [class.open]="showCategoryDropdown" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 10l5 5 5-5z"/>
+                  </svg>
+                </div>
+                
+                <div class="category-options" *ngIf="showCategoryDropdown">
+                  <div 
+                    class="category-option"
+                    *ngFor="let category of categories"
+                    (click)="selectCategory(category)">
+                    {{ category.name }}
+                  </div>
+                  
+                  <div class="new-category-section">
+                    <div class="new-category-input">
+                      <input 
+                        type="text" 
+                        placeholder="Categoria Personalizada"
+                        [(ngModel)]="newCategoryName"
+                        [ngModelOptions]="{standalone: true}"
+                        (keyup.enter)="createNewCategory()"
+                        #newCategoryInput>
+                      <div class="new-category-actions">
+                        <button 
+                          type="button" 
+                          class="btn-save-category"
+                          (click)="createNewCategory()"
+                          [disabled]="!newCategoryName || newCategoryName.trim().length === 0 || creatingCategory">
+                          {{ creatingCategory ? 'Salvando...' : 'Criar' }}
+                        </button>
+                      </div>
+                    </div>
+                    <div class="error" *ngIf="categoryError">
+                      {{ categoryError }}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+          
+          <div class="error" *ngIf="expenseForm.get('expenseCategoryId')?.invalid && expenseForm.get('expenseCategoryId')?.touched">
+            Selecione uma categoria
           </div>
         </div>
 
@@ -123,11 +151,10 @@
           type="submit" 
           class="btn-submit"
           [disabled]="expenseForm.invalid || loading">
-          {{ loading ? 'Salvando...' : 'Salvar Despesa' }}
+          {{ loading ? (isEditing ? 'Atualizando...' : 'Salvando...') : (isEditing ? 'Atualizar Despesa' : 'Salvar Despesa') }}
         </button>
       </div>
     </form>
-
 
     <div class="error" *ngIf="errorMessage">
       {{ errorMessage }}
@@ -136,41 +163,45 @@
 
   <!-- Filtros -->
   <div class="filters-container">
-    <div class="tabs">
-      <button 
-        class="tab-button"
-        [class.active]="activeTab === 'todas'"
-        (click)="setActiveTab('todas')">
-        Todas
-      </button>
-      <button 
-        class="tab-button"
-        [class.active]="activeTab === 'receitas'"
-        (click)="setActiveTab('receitas')">
-        Receitas
-      </button>
-      <button 
-        class="tab-button"
-        [class.active]="activeTab === 'despesas'"
-        (click)="setActiveTab('despesas')">
-        Despesas
-      </button>
-    </div>
-
     <div class="filter-title">
-      <h3>Filtrar transações</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3>Filtrar despesas</h3>
+        <button 
+          type="button" 
+          class="btn-clear-filters"
+          (click)="clearAllFilters()"
+          title="Limpar todos os filtros">
+          Limpar Filtros
+        </button>
+      </div>
     </div>
 
     <div class="filter-controls">
       <div class="filter-group">
         <label>Período</label>
-        <select [(ngModel)]="filters.startDate" (ngModelChange)="updateFilter('period', $event)">
-          <option value="">Últimos 30 dias</option>
+        <select [(ngModel)]="selectedPeriod" (ngModelChange)="onPeriodChange($event)">
+          <option value="" selected>Todas</option>
           <option value="7">Últimos 7 dias</option>
           <option value="30">Últimos 30 dias</option>
           <option value="90">Últimos 90 dias</option>
           <option value="custom">Personalizado</option>
         </select>
+      </div>
+
+      <!-- Controles de data personalizada -->
+      <div *ngIf="showCustomDateRange" class="filter-group">
+        <label>Data Início</label>
+        <input 
+          type="date" 
+          [(ngModel)]="filters.startDate"
+          (change)="updateFilter('startDate', filters.startDate)">
+      </div>
+      <div *ngIf="showCustomDateRange" class="filter-group">
+        <label>Data Fim</label>
+        <input 
+          type="date" 
+          [(ngModel)]="filters.endDate"
+          (change)="updateFilter('endDate', filters.endDate)">
       </div>
 
       <div class="filter-group">
@@ -195,28 +226,30 @@
 
       <div class="filter-group search-group">
         <label>Busca</label>
-        <input 
-          type="text" 
-          placeholder="Buscar transação"
-          [(ngModel)]="filters.searchTerm"
-          (ngModelChange)="updateFilter('searchTerm', $event)">
+        <div class="search-input-wrapper">
+          <input 
+            type="text" 
+            placeholder="Buscar transação"
+            [(ngModel)]="filters.searchTerm"
+            (ngModelChange)="updateFilter('searchTerm', $event)">
+          <img src="assets/lupa.svg" alt="Buscar" class="search-icon">
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Lista de Transações -->
+  <!-- Lista de Despesas -->
   <div class="transactions-section">
-    <h3>Todas as transações</h3>
-    <p class="transactions-subtitle">Histórico das últimas transações</p>
+    <h3>Todas as despesas</h3>
+    <p class="transactions-subtitle">Histórico das últimas despesas</p>
 
     <div class="transactions-table">
       <div class="table-header">
-        <div class="header-cell">Descrição</div>
+        <div class="header-cell">Destino do pagamento</div>
         <div class="header-cell">Categoria</div>
         <div class="header-cell">Data</div>
         <div class="header-cell">Conta</div>
         <div class="header-cell">Valor</div>
-        <div class="header-cell">Ações</div>
       </div>
 
       <div *ngIf="filteredExpenses.length === 0" class="no-transactions">
@@ -225,19 +258,71 @@
 
       <div 
         *ngFor="let expense of filteredExpenses" 
-        class="table-row expense-row">
+        class="table-row expense-row"
+        (click)="openTransactionModal(expense)">
         <div class="cell">
-          <div class="transaction-icon expense-icon">-</div>
+          <div class="transaction-icon">
+            <img src="assets/down.svg" alt="Despesa">
+          </div>
           {{ expense.paymentDestination }}
         </div>
         <div class="cell">{{ expense.category?.name || 'Sem categoria' }}</div>
         <div class="cell">{{ formatDate(expense.date) }}</div>
         <div class="cell">{{ expense.balanceSource }}</div>
-        <div class="cell expense-amount">-R$ {{ formatCurrency(expense.amount) }}</div>
-        <div class="cell actions">
-          <button class="btn-edit" (click)="editExpense(expense)">Editar</button>
-          <button class="btn-delete" (click)="deleteExpense(expense.expenseId)">Excluir</button>
+        <div class="cell expense-amount">R$ {{ formatCurrency(expense.amount) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes da Despesa -->
+  <div class="modal-overlay" *ngIf="showTransactionModal" (click)="closeTransactionModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Detalhes da Despesa</h2>
+        <button class="modal-close" (click)="closeTransactionModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body" *ngIf="selectedTransaction">
+        <div class="detail-item">
+          <span class="detail-label">Destino do pagamento</span>
+          <span class="detail-value">{{ selectedTransaction.paymentDestination }}</span>
         </div>
+        
+        <div class="detail-item">
+          <span class="detail-label">Categoria</span>
+          <span class="detail-value">{{ selectedTransaction.category?.name || 'Sem categoria' }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <span class="detail-label">Data</span>
+          <span class="detail-value">{{ formatDate(selectedTransaction.date) }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <span class="detail-label">Conta</span>
+          <span class="detail-value">{{ selectedTransaction.balanceSource }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <span class="detail-label">Valor</span>
+          <span class="detail-value amount expense">R$ {{ formatCurrency(selectedTransaction.amount) }}</span>
+        </div>
+        
+        <div class="detail-item" *ngIf="selectedTransaction.observation">
+          <span class="detail-label">Observação</span>
+          <span class="detail-value">{{ selectedTransaction.observation }}</span>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-modal primary" (click)="editExpenseFromModal()">
+          Editar
+        </button>
+        <button class="btn-modal danger" (click)="deleteExpenseFromModal()">
+          Excluir
+        </button>
       </div>
     </div>
   </div>
