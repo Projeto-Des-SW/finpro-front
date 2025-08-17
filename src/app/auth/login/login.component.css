@@ -131,9 +131,10 @@ body {
 }
 
 .error {
-    color: #828282;
+    color: #e74c3c;
     font-size: 13px;
-    margin-top: 8px;
+    margin-top: 2px;
+    margin-bottom: 32px;
     display: block;
     text-align: center;
 }
@@ -163,6 +164,7 @@ button[type="submit"]:hover {
     margin-bottom: 24px;
     color: #6c757d;
     font-size: 14px;
+    font-weight: 400;
 }
 
 .register-link {
