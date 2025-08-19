@@ -42,7 +42,7 @@ export class LoginComponent {
         
         if (success) {
           console.log('Login realizado com sucesso');
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['app/dashboard']);
         }
         
       } catch (error: any) {
