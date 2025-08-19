@@ -8,7 +8,7 @@ import { authGuard } from "./auth/auth.guard";
 import { HomeComponent } from "./home/home.component"; 
 import { ExpenseComponent } from "./expense/expense.component";
 import { TransactionComponent } from "./transaction/transaction.component";
-import { LayoutComponent } from "./shared/layout/layout.component";
+import { LayoutComponent } from "./navbar/layout/layout.component";
 
 const routeConfig: Routes = [
     { 

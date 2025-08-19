@@ -3,7 +3,7 @@
     <h1>Dashboard</h1>
     <div class="header-actions">
       <button class="btn-new-transaction">
-        <a routerLink="app/transacoes">+ Nova Transação</a>
+        <a routerLink="/app/transacoes">+ Nova Transação</a>
       </button>
     </div>
   </header>
@@ -47,7 +47,7 @@
         <img class="stat-icon" src="/assets/despesas.svg" alt="">
       </div>
 
-      <div class="stat-card transaction-card" routerLink="app/transacoes">
+      <div class="stat-card transaction-card" routerLink="/app/transacoes">
         <div class="stat-content">
           <h3>Transações</h3>
           <p class="stat-value">{{ stats.transactionCount }}</p>

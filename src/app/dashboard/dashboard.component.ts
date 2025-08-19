@@ -342,6 +342,6 @@ export class DashboardComponent implements OnInit {
   }
 
   goToTransactions() {
-    this.router.navigate(['/transacoes']);
+    this.router.navigate(['/app/transacoes']);
   }
 }
