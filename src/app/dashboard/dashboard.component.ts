@@ -101,10 +101,21 @@ export class DashboardComponent implements OnInit {
         this.incomeService.getAllIncomes().catch(() => [])
       ]);
 
-      const totalIncomes = incomes.reduce((sum: number, income: any) => sum + (income.amount || 0), 0);
-      const totalExpenses = expenses.reduce((sum: number, expense: any) => sum + (expense.amount || 0), 0);
+      // CORRIGIDO: Calcular estatísticas apenas do mês atual
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1; // 1-12
+
+      console.log(`Calculando dados para: ${currentMonth}/${currentYear}`);
+
+      // Filtrar transações do mês atual
+      const currentMonthIncomes = this.filterTransactionsByMonth(incomes, currentYear, currentMonth);
+      const currentMonthExpenses = this.filterTransactionsByMonth(expenses, currentYear, currentMonth);
+
+      const totalIncomes = currentMonthIncomes.reduce((sum: number, income: any) => sum + (income.amount || 0), 0);
+      const totalExpenses = currentMonthExpenses.reduce((sum: number, expense: any) => sum + (expense.amount || 0), 0);
       const balance = totalIncomes - totalExpenses;
-      const transactionCount = incomes.length + expenses.length;
+      const transactionCount = currentMonthIncomes.length + currentMonthExpenses.length;
 
       this.stats = {
         totalIncomes,
@@ -113,7 +124,9 @@ export class DashboardComponent implements OnInit {
         transactionCount
       };
 
-      this.processRecentTransactions(expenses, incomes);
+      console.log(`Estatísticas do mês ${currentMonth}/${currentYear}:`, this.stats);
+
+      this.processRecentTransactions(currentMonthExpenses, currentMonthIncomes);
 
       await this.loadChartsData();
 
@@ -132,25 +145,39 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  // NOVO: Método para filtrar transações por mês específico
+  private filterTransactionsByMonth(transactions: any[], year: number, month: number): any[] {
+    return transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      const transactionYear = transactionDate.getFullYear();
+      const transactionMonth = transactionDate.getMonth() + 1; // 1-12
+
+      return transactionYear === year && transactionMonth === month;
+    });
+  }
+
   async loadChartsData() {
     this.chartsLoading = true;
     this.chartsError = '';
 
     try {
-      const currentYear = new Date().getFullYear();
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1; // 1-12
       
+      console.log(`Carregando dados dos gráficos para: ${currentMonth}/${currentYear}`);
+
       const [monthlyExpenses, monthlyIncomes, categoryExpenses] = await Promise.all([
         this.dashboardService.getMonthlyExpenses(currentYear),
         this.dashboardService.getMonthlyIncomes(currentYear),
-        this.dashboardService.getExpensesByCategory(currentYear)
+        this.dashboardService.getExpensesByCategory(currentYear, currentMonth)
       ]);
 
       console.log('Dados mensais - Despesas:', monthlyExpenses);
       console.log('Dados mensais - Receitas:', monthlyIncomes);
-      console.log('Dados por categoria:', categoryExpenses);
+      console.log(`Dados por categoria (${currentMonth}/${currentYear}):`, categoryExpenses);
 
       this.processMonthlyData(monthlyExpenses, monthlyIncomes);
-
       this.processCategoryData(categoryExpenses);
 
     } catch (error: any) {
@@ -193,6 +220,7 @@ export class DashboardComponent implements OnInit {
   private processCategoryData(categories: CategoryData[]) {
     if (categories.length === 0) {
       this.categoryData = [];
+      console.log('Nenhuma categoria encontrada para o mês atual');
       return;
     }
 
@@ -204,6 +232,8 @@ export class DashboardComponent implements OnInit {
       percentage: Math.round((Number(cat.total) / total) * 100),
       color: this.categoryColors[index % this.categoryColors.length]
     }));
+
+    console.log('Categorias processadas para o mês atual:', this.categoryData);
   }
 
   private processRecentTransactions(expenses: any[], incomes: any[]) {
@@ -233,13 +263,14 @@ export class DashboardComponent implements OnInit {
       });
     });
 
-
     const sortedTransactions = allTransactions
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     
     this.recentTransactions = sortedTransactions.slice(0, 5);
     
-    console.log(`Total de transações: ${sortedTransactions.length}, Exibindo: ${this.recentTransactions.length}`);
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    console.log(`Transações recentes do mês ${currentMonth}: ${this.recentTransactions.length} de ${sortedTransactions.length} total`);
   }
 
   getMaxValue(): number {
@@ -284,6 +315,7 @@ export class DashboardComponent implements OnInit {
       currency: 'BRL'
     }).format(value);
   }
+
 
   formatDate(dateString: string): string {
     if (dateString.includes('T')) {
