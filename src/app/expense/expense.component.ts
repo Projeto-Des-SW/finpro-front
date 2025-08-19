@@ -472,4 +472,16 @@ export class ExpenseComponent implements OnInit {
   formatCurrency(amount: number): string {
     return amount.toFixed(2).replace('.', ',');
   }
+private scrollToForm() {
+ const formElement = document.querySelector('.form-container');
+ if (formElement) {
+   const elementPosition = formElement.getBoundingClientRect().top + window.pageYOffset;
+   const offsetPosition = elementPosition - 80;
+   
+   window.scrollTo({
+     top: offsetPosition,
+     behavior: 'smooth'
+   });
+ }
+}
 }
