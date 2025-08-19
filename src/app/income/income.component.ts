@@ -3,8 +3,24 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
-import { ExpenseService } from './expense.service';
-import { Expense, ExpenseResponse, ExpenseCategory } from '../entity/expense';
+import { IncomeService } from './income.service';
+import { IncomeCategoryService, IncomeCategory } from './income-category.service';
+import { Income } from '../entity/income';
+
+
+interface IncomeResponse {
+  incomeId: number;
+  date: string;
+  amount: number;
+  paymentOrigin: string;
+  balanceSource: string;
+  observation?: string;
+  userId: number;
+  category?: {
+    incomeCategoryId: number;
+    name: string;
+  };
+}
 
 interface FilterOptions {
   startDate: string;
@@ -15,29 +31,29 @@ interface FilterOptions {
 }
 
 @Component({
-  selector: 'app-expense',
+  selector: 'app-income',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
-  templateUrl: './expense.component.html',
-  styleUrls: ['./expense.component.css']
+  templateUrl: './income.component.html',
+  styleUrls: ['./income.component.css']
 })
-export class ExpenseComponent implements OnInit {
+export class IncomeComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
-  private expenseService = inject(ExpenseService);
+  private incomeService = inject(IncomeService);
+  private incomeCategoryService = inject(IncomeCategoryService);
 
-  expenses: ExpenseResponse[] = [];
-  filteredExpenses: ExpenseResponse[] = [];
-  categories: ExpenseCategory[] = [];
+  incomes: IncomeResponse[] = [];
+  filteredIncomes: IncomeResponse[] = [];
+  categories: IncomeCategory[] = [];
   uniqueAccounts: string[] = [];
-
+  
   showForm = false;
   loading = false;
   errorMessage = '';
-  activeTab = 'despesas';
   showCustomDateRange = false;
-  selectedPeriod = ''; // Default: Todas as transações
+  selectedPeriod = ''; // Default: Todas as receitas
 
   // Propriedades para o dropdown de categorias
   showCategoryDropdown = false;
@@ -46,13 +62,13 @@ export class ExpenseComponent implements OnInit {
   creatingCategory = false;
   categoryError = '';
 
-  // Propriedades para o modal de transação
+  // Propriedades para o modal de receita
   showTransactionModal = false;
-  selectedTransaction: ExpenseResponse | null = null;
+  selectedTransaction: IncomeResponse | null = null;
 
   // Propriedades para edição
   isEditing = false;
-  editingExpenseId: number | null = null;
+  editingIncomeId: number | null = null;
 
   filters: FilterOptions = {
     startDate: '',
@@ -62,11 +78,11 @@ export class ExpenseComponent implements OnInit {
     searchTerm: ''
   };
 
-  expenseForm: FormGroup = this.fb.group({
+  incomeForm: FormGroup = this.fb.group({
     date: [this.getCurrentDate(), [Validators.required]],
     amount: ['', [Validators.required, Validators.min(0.01)]],
-    expenseCategoryId: ['', [Validators.required]],
-    paymentDestination: ['', [Validators.required]],
+    incomeCategoryId: ['', [Validators.required]],
+    paymentOrigin: ['', [Validators.required]],
     balanceSource: ['', [Validators.required]],
     observation: ['']
   });
@@ -91,16 +107,15 @@ export class ExpenseComponent implements OnInit {
   }
 
   private setDefaultDateRange() {
-    // Não definir datas por padrão para mostrar todas as transações
     this.filters.startDate = '';
     this.filters.endDate = '';
-    this.selectedPeriod = ''; // Definir como "Todas" por padrão
+    this.selectedPeriod = '';
   }
 
   async loadData() {
     try {
       await Promise.all([
-        this.loadExpenses(),
+        this.loadIncomes(),
         this.loadCategories()
       ]);
       this.updateUniqueAccounts();
@@ -111,16 +126,16 @@ export class ExpenseComponent implements OnInit {
     }
   }
 
-  async loadExpenses() {
-    this.expenses = await this.expenseService.getAllExpenses();
+  async loadIncomes() {
+    this.incomes = await this.incomeService.getAllIncomes() as IncomeResponse[];
   }
 
   async loadCategories() {
-    this.categories = await this.expenseService.getAllCategories();
+    this.categories = await this.incomeCategoryService.getAllCategories();
   }
 
   updateUniqueAccounts() {
-    const accounts = this.expenses.map(expense => expense.balanceSource);
+    const accounts = this.incomes.map(income => income.balanceSource);
     this.uniqueAccounts = [...new Set(accounts)].filter(Boolean);
   }
 
@@ -131,14 +146,15 @@ export class ExpenseComponent implements OnInit {
     }
   }
 
-  // Métodos para o dropdown de categorias
+  // =================== CATEGORIAS DROPDOWN ===================
+  
   toggleCategoryDropdown() {
     this.showCategoryDropdown = !this.showCategoryDropdown;
     this.categoryError = '';
   }
 
-  selectCategory(category: ExpenseCategory) {
-    this.expenseForm.get('expenseCategoryId')?.setValue(category.expenseCategoryId);
+  selectCategory(category: IncomeCategory) {
+    this.incomeForm.get('incomeCategoryId')?.setValue(category.incomeCategoryId);
     this.selectedCategoryName = category.name;
     this.showCategoryDropdown = false;
     this.categoryError = '';
@@ -175,19 +191,19 @@ export class ExpenseComponent implements OnInit {
     this.categoryError = '';
 
     try {
-      const newCategory = await this.expenseService.createCategory({
-        name: this.newCategoryName.trim()
-      });
-
+      const newCategory = await this.incomeCategoryService.findOrCreateCategory(
+        this.newCategoryName.trim()
+      );
+      
       // Atualizar lista de categorias
       await this.loadCategories();
-
+      
       // Selecionar a nova categoria
       this.selectCategory(newCategory);
-
+      
       // Limpar input
       this.newCategoryName = '';
-
+      
     } catch (error: any) {
       console.error('Erro ao criar categoria:', error);
       this.categoryError = error.message || 'Erro ao criar categoria';
@@ -197,12 +213,12 @@ export class ExpenseComponent implements OnInit {
   }
 
   async onSubmit() {
-    if (this.expenseForm.valid) {
+    if (this.incomeForm.valid) {
       this.loading = true;
       this.errorMessage = '';
 
       try {
-        const categoryId = this.expenseForm.get('expenseCategoryId')?.value;
+        const categoryId = this.incomeForm.get('incomeCategoryId')?.value;
 
         if (!categoryId) {
           this.errorMessage = 'Selecione uma categoria';
@@ -210,47 +226,47 @@ export class ExpenseComponent implements OnInit {
           return;
         }
 
-        const expenseData: Expense = {
-          date: this.expenseForm.get('date')?.value,
-          amount: this.expenseForm.get('amount')?.value,
-          expenseCategoryId: categoryId,
-          paymentDestination: this.expenseForm.get('paymentDestination')?.value,
-          balanceSource: this.expenseForm.get('balanceSource')?.value,
-          observation: this.expenseForm.get('observation')?.value || undefined
+        const incomeData: Income = {
+          date: this.incomeForm.get('date')?.value,
+          amount: this.incomeForm.get('amount')?.value,
+          incomeCategoryId: categoryId,
+          paymentOrigin: this.incomeForm.get('paymentOrigin')?.value,
+          balanceSource: this.incomeForm.get('balanceSource')?.value,
+          observation: this.incomeForm.get('observation')?.value || undefined
         };
 
-        if (this.isEditing && this.editingExpenseId) {
-          // Atualizar despesa existente
-          await this.expenseService.updateExpense(this.editingExpenseId, expenseData);
-          console.log('Despesa atualizada com sucesso');
+        if (this.isEditing && this.editingIncomeId) {
+          // Atualizar receita existente
+          await this.incomeService.updateIncome(this.editingIncomeId, incomeData);
+          console.log('Receita atualizada com sucesso');
         } else {
-          // Criar nova despesa
-          await this.expenseService.createExpense(expenseData);
-          console.log('Despesa criada com sucesso');
+          // Criar nova receita
+          await this.incomeService.createIncome(incomeData);
+          console.log('Receita criada com sucesso');
         }
-
+        
         // Recarrega os dados
-        await this.loadExpenses();
+        await this.loadIncomes();
         this.updateUniqueAccounts();
         this.applyFilters();
-
+        
         // Reset do formulário
         this.resetForm();
         this.showForm = false;
 
       } catch (error: any) {
-        console.error('Erro ao salvar despesa:', error);
-        this.errorMessage = error.message || 'Erro ao salvar despesa';
+        console.error('Erro ao salvar receita:', error);
+        this.errorMessage = error.message || 'Erro ao salvar receita';
       } finally {
         this.loading = false;
       }
     } else {
-      this.expenseForm.markAllAsTouched();
+      this.incomeForm.markAllAsTouched();
     }
   }
 
   resetForm() {
-    this.expenseForm.reset({
+    this.incomeForm.reset({
       date: this.getCurrentDate()
     });
     this.errorMessage = '';
@@ -258,19 +274,13 @@ export class ExpenseComponent implements OnInit {
     this.newCategoryName = '';
     this.categoryError = '';
     this.showCategoryDropdown = false;
-
+    
     // Reset edição
     this.isEditing = false;
-    this.editingExpenseId = null;
-  }
-
-  setActiveTab(tab: string) {
-    this.activeTab = tab;
-    this.applyFilters();
+    this.editingIncomeId = null;
   }
 
   clearAllFilters() {
-    // Resetar todos os filtros
     this.filters = {
       startDate: '',
       endDate: '',
@@ -278,41 +288,34 @@ export class ExpenseComponent implements OnInit {
       account: '',
       searchTerm: ''
     };
-
-    // Resetar controles de período
+    
     this.selectedPeriod = '';
     this.showCustomDateRange = false;
-
-    // Aplicar filtros (vai mostrar todas as transações)
     this.applyFilters();
   }
 
   onPeriodChange(period: string) {
     this.selectedPeriod = period;
     this.showCustomDateRange = period === 'custom';
-
+    
     if (period === '') {
-      // Todas as transações - limpar filtros de data
       this.filters.startDate = '';
       this.filters.endDate = '';
     } else if (period !== 'custom') {
-      // Período específico
       const days = parseInt(period);
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - days);
-
+      
       this.filters.startDate = startDate.toISOString().split('T')[0];
       this.filters.endDate = endDate.toISOString().split('T')[0];
     }
-
+    
     this.applyFilters();
   }
 
   updateFilter(filterType: string, value: any) {
     switch (filterType) {
-      case 'period':
-        break;
       case 'category':
         this.filters.category = value;
         break;
@@ -333,50 +336,51 @@ export class ExpenseComponent implements OnInit {
   }
 
   applyFilters() {
-    let filtered = [...this.expenses];
+    let filtered = [...this.incomes];
 
-    // Filtro por datas (só aplicar se houver datas definidas)
+    // Filtro por datas
     if (this.filters.startDate && this.filters.endDate) {
       const startDate = new Date(this.filters.startDate);
       const endDate = new Date(this.filters.endDate);
-      endDate.setHours(23, 59, 59, 999); // Fim do dia
+      endDate.setHours(23, 59, 59, 999);
 
-      filtered = filtered.filter(expense => {
-        const expenseDate = new Date(expense.date);
-        return expenseDate >= startDate && expenseDate <= endDate;
+      filtered = filtered.filter(income => {
+        const incomeDate = new Date(income.date);
+        return incomeDate >= startDate && incomeDate <= endDate;
       });
     }
 
     // Filtro por categoria
     if (this.filters.category) {
-      filtered = filtered.filter(expense =>
-        expense.category?.name === this.filters.category
+      filtered = filtered.filter(income => 
+        income.category?.name === this.filters.category
       );
     }
 
     // Filtro por conta
     if (this.filters.account) {
-      filtered = filtered.filter(expense =>
-        expense.balanceSource === this.filters.account
+      filtered = filtered.filter(income => 
+        income.balanceSource === this.filters.account
       );
     }
 
     // Filtro por busca
     if (this.filters.searchTerm) {
       const searchTerm = this.filters.searchTerm.toLowerCase();
-      filtered = filtered.filter(expense =>
-        expense.paymentDestination.toLowerCase().includes(searchTerm) ||
-        expense.balanceSource.toLowerCase().includes(searchTerm) ||
-        (expense.observation && expense.observation.toLowerCase().includes(searchTerm))
+      filtered = filtered.filter(income =>
+        income.paymentOrigin.toLowerCase().includes(searchTerm) ||
+        income.balanceSource.toLowerCase().includes(searchTerm) ||
+        (income.observation && income.observation.toLowerCase().includes(searchTerm))
       );
     }
 
-    this.filteredExpenses = filtered;
+    this.filteredIncomes = filtered;
   }
 
-  // Métodos para o modal de transação
-  openTransactionModal(transaction: ExpenseResponse) {
-    this.selectedTransaction = transaction;
+  // =================== MODAL DE RECEITA ===================
+
+  openTransactionModal(income: IncomeResponse) {
+    this.selectedTransaction = income;
     this.showTransactionModal = true;
   }
 
@@ -385,77 +389,77 @@ export class ExpenseComponent implements OnInit {
     this.selectedTransaction = null;
   }
 
-  editExpenseFromModal() {
+  editIncomeFromModal() {
     if (this.selectedTransaction) {
-      this.editExpense(this.selectedTransaction);
+      this.editIncome(this.selectedTransaction);
       this.closeTransactionModal();
     }
   }
 
-  async deleteExpenseFromModal() {
-    if (this.selectedTransaction && confirm('Tem certeza que deseja excluir esta despesa?')) {
+  async deleteIncomeFromModal() {
+    if (this.selectedTransaction && confirm('Tem certeza que deseja excluir esta receita?')) {
       try {
-        await this.expenseService.deleteExpense(this.selectedTransaction.expenseId);
-        await this.loadExpenses();
+        await this.incomeService.deleteIncome(this.selectedTransaction.incomeId);
+        await this.loadIncomes();
         this.updateUniqueAccounts();
         this.applyFilters();
         this.closeTransactionModal();
       } catch (error: any) {
-        console.error('Erro ao deletar despesa:', error);
-        alert(error.message || 'Erro ao deletar despesa');
+        console.error('Erro ao deletar receita:', error);
+        alert(error.message || 'Erro ao deletar receita');
       }
     }
   }
 
-  async deleteExpense(expenseId: number) {
-    if (confirm('Tem certeza que deseja excluir esta despesa?')) {
+  async deleteIncome(incomeId: number) {
+    if (confirm('Tem certeza que deseja excluir esta receita?')) {
       try {
-        await this.expenseService.deleteExpense(expenseId);
-        await this.loadExpenses();
+        await this.incomeService.deleteIncome(incomeId);
+        await this.loadIncomes();
         this.updateUniqueAccounts();
         this.applyFilters();
       } catch (error: any) {
-        console.error('Erro ao deletar despesa:', error);
-        alert(error.message || 'Erro ao deletar despesa');
+        console.error('Erro ao deletar receita:', error);
+        alert(error.message || 'Erro ao deletar receita');
       }
     }
   }
 
-  editExpense(expense: ExpenseResponse) {
-    // Preencher o formulário com os dados da despesa
-    this.expenseForm.patchValue({
-      date: expense.date,
-      amount: expense.amount,
-      expenseCategoryId: expense.category?.expenseCategoryId || '',
-      paymentDestination: expense.paymentDestination,
-      balanceSource: expense.balanceSource,
-      observation: expense.observation || ''
+  editIncome(income: IncomeResponse) {
+    // Preencher o formulário com os dados da receita
+    this.incomeForm.patchValue({
+      date: income.date,
+      amount: income.amount,
+      incomeCategoryId: income.category?.incomeCategoryId || '',
+      paymentOrigin: income.paymentOrigin,
+      balanceSource: income.balanceSource,
+      observation: income.observation || ''
     });
 
     // Definir categoria selecionada no dropdown
-    if (expense.category) {
-      this.selectedCategoryName = expense.category.name;
+    if (income.category) {
+      this.selectedCategoryName = income.category.name;
     }
 
     // Configurar modo de edição
     this.isEditing = true;
-    this.editingExpenseId = expense.expenseId;
-
+    this.editingIncomeId = income.incomeId;
+    
     // Mostrar formulário
     this.showForm = true;
-
+    
     // Limpar erros
     this.errorMessage = '';
-
-    console.log('Editando despesa:', expense);
+    
+    console.log('Editando receita:', income);
   }
 
   getCurrentDate(): string {
     const today = new Date();
     const year = today.getFullYear();
-    const month = today.getMonth() + 1; // Mês começa em 0
+    const month = today.getMonth() + 1;
     const day = today.getDate();
-
+    
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
   }
 
@@ -468,10 +472,11 @@ export class ExpenseComponent implements OnInit {
     const date = new Date(year, month - 1, day);
     return date.toLocaleDateString('pt-BR');
   }
-
+  
   formatCurrency(amount: number): string {
     return amount.toFixed(2).replace('.', ',');
   }
+
 private scrollToForm() {
  const formElement = document.querySelector('.form-container');
  if (formElement) {

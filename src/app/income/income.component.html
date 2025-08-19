@@ -1,0 +1,328 @@
+<div class="expense-container">
+  <header class="expense-header">
+    <h1>Receitas</h1>
+    <button 
+      class="btn-new-transaction" 
+      (click)="toggleForm()"
+      [class.active]="showForm">
+      
+      <ng-container *ngIf="!showForm">
+        <img src="assets/mais.svg" alt="Adicionar">
+        <span>Nova receita</span>
+      </ng-container>
+
+      <ng-container *ngIf="showForm">
+        <span>Cancelar</span>
+      </ng-container>
+    </button>
+  </header>
+
+  <!-- Formulário de Nova Receita -->
+  <div class="form-container" [class.show]="showForm">
+    <h2>{{ isEditing ? 'Editar Receita' : 'Nova Receita' }}</h2>
+    <form [formGroup]="incomeForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="date">Data</label>
+          <input 
+            type="date" 
+            id="date" 
+            formControlName="date" 
+            required>
+          <div class="error" *ngIf="incomeForm.get('date')?.invalid && incomeForm.get('date')?.touched">
+            Data é obrigatória
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="amount">Valor</label>
+          <input 
+            type="number" 
+            id="amount" 
+            formControlName="amount" 
+            placeholder="0,00"
+            step="0.01"
+            required>
+          <div class="error" *ngIf="incomeForm.get('amount')?.invalid && incomeForm.get('amount')?.touched">
+            <span *ngIf="incomeForm.get('amount')?.hasError('required')">Valor é obrigatório</span>
+            <span *ngIf="incomeForm.get('amount')?.hasError('min')">Valor deve ser maior que zero</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Dropdown de Categoria -->
+        <div class="form-group category-group">
+          <label for="category">Categoria</label>
+          <div class="category-input-container">
+            <div class="category-select-wrapper">
+              <div class="category-dropdown">
+                <div 
+                  class="category-trigger"
+                  [class.open]="showCategoryDropdown"
+                  [class.error]="incomeForm.get('incomeCategoryId')?.invalid && incomeForm.get('incomeCategoryId')?.touched"
+                  (click)="toggleCategoryDropdown()">
+                  <span>{{ selectedCategoryName || 'Selecione uma categoria' }}</span>
+                  <svg class="dropdown-arrow" [class.open]="showCategoryDropdown" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 10l5 5 5-5z"/>
+                  </svg>
+                </div>
+                
+                <div class="category-options" *ngIf="showCategoryDropdown">
+                  <div 
+                    class="category-option"
+                    *ngFor="let category of categories"
+                    (click)="selectCategory(category)">
+                    {{ category.name }}
+                  </div>
+                  
+                  <div class="new-category-section">
+                    <div class="new-category-input">
+                      <input 
+                        type="text" 
+                        placeholder="Categoria Personalizada"
+                        [(ngModel)]="newCategoryName"
+                        [ngModelOptions]="{standalone: true}"
+                        (keyup.enter)="createNewCategory()"
+                        #newCategoryInput>
+                      <div class="new-category-actions">
+                        <button 
+                          type="button" 
+                          class="btn-save-category"
+                          (click)="createNewCategory()"
+                          [disabled]="!newCategoryName || newCategoryName.trim().length === 0 || creatingCategory">
+                          {{ creatingCategory ? 'Salvando...' : 'Criar' }}
+                        </button>
+                      </div>
+                    </div>
+                    <div class="error" *ngIf="categoryError">
+                      {{ categoryError }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="error" *ngIf="incomeForm.get('incomeCategoryId')?.invalid && incomeForm.get('incomeCategoryId')?.touched">
+            Selecione uma categoria
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="paymentOrigin">Origem do Pagamento</label>
+          <input 
+            type="text" 
+            id="paymentOrigin" 
+            formControlName="paymentOrigin"
+            placeholder="Ex: Salário, Freelance, Investimentos"
+            required>
+          <div class="error" *ngIf="incomeForm.get('paymentOrigin')?.invalid && incomeForm.get('paymentOrigin')?.touched">
+            Origem do pagamento é obrigatória
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="balanceSource">Conta</label>
+          <input 
+            type="text" 
+            id="balanceSource" 
+            formControlName="balanceSource"
+            placeholder="Ex: Conta Corrente, Poupança"
+            required>
+          <div class="error" *ngIf="incomeForm.get('balanceSource')?.invalid && incomeForm.get('balanceSource')?.touched">
+            Conta é obrigatória
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="observation">Observação</label>
+          <input 
+            type="text" 
+            id="observation" 
+            formControlName="observation"
+            placeholder="Observações (opcional)">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          type="submit" 
+          class="btn-submit"
+          [disabled]="incomeForm.invalid || loading">
+          {{ loading ? (isEditing ? 'Atualizando...' : 'Salvando...') : (isEditing ? 'Atualizar Receita' : 'Salvar Receita') }}
+        </button>
+      </div>
+    </form>
+
+    <div class="error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-container">
+    <div class="filter-title">
+      <h3>Filtrar receitas</h3>
+      <button 
+        type="button" 
+        class="btn-clear-filters"
+        (click)="clearAllFilters()"
+        title="Limpar todos os filtros">
+        Limpar Filtros
+      </button>
+    </div>
+
+    <div class="filter-controls">
+      <div class="filter-group">
+        <label>Período</label>
+        <select [(ngModel)]="selectedPeriod" (ngModelChange)="onPeriodChange($event)">
+          <option value="" selected>Todas</option>
+          <option value="7">Últimos 7 dias</option>
+          <option value="30">Últimos 30 dias</option>
+          <option value="90">Últimos 90 dias</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </div>
+
+      <!-- Controles de data personalizada -->
+      <div *ngIf="showCustomDateRange" class="filter-group">
+        <label>Data Início</label>
+        <input 
+          type="date" 
+          [(ngModel)]="filters.startDate"
+          (change)="updateFilter('startDate', filters.startDate)">
+      </div>
+      <div *ngIf="showCustomDateRange" class="filter-group">
+        <label>Data Fim</label>
+        <input 
+          type="date" 
+          [(ngModel)]="filters.endDate"
+          (change)="updateFilter('endDate', filters.endDate)">
+      </div>
+
+      <div class="filter-group">
+        <label>Categoria</label>
+        <select [(ngModel)]="filters.category" (ngModelChange)="updateFilter('category', $event)">
+          <option value="">Todas</option>
+          <option *ngFor="let category of categories" [value]="category.name">
+            {{ category.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Conta</label>
+        <select [(ngModel)]="filters.account" (ngModelChange)="updateFilter('account', $event)">
+          <option value="">Todas</option>
+          <option *ngFor="let account of uniqueAccounts" [value]="account">
+            {{ account }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group search-group">
+        <label>Busca</label>
+        <div class="search-input-wrapper">
+          <input 
+            type="text" 
+            placeholder="Buscar receita"
+            [(ngModel)]="filters.searchTerm"
+            (ngModelChange)="updateFilter('searchTerm', $event)">
+          <img src="assets/lupa.svg" alt="Buscar" class="search-icon">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de Receitas -->
+  <div class="transactions-section">
+    <h3>Todas as receitas</h3>
+    <p class="transactions-subtitle">Histórico das últimas receitas</p>
+
+    <div class="transactions-table">
+      <div class="table-header">
+        <div class="header-cell">Origem do pagamento</div>
+        <div class="header-cell">Categoria</div>
+        <div class="header-cell">Data</div>
+        <div class="header-cell">Conta</div>
+        <div class="header-cell">Valor</div>
+      </div>
+
+      <div *ngIf="filteredIncomes.length === 0" class="no-transactions">
+        <p>Nenhuma receita encontrada</p>
+      </div>
+
+      <div 
+        *ngFor="let income of filteredIncomes" 
+        class="table-row"
+        (click)="openTransactionModal(income)">
+        <div class="cell">
+          <div class="transaction-icon">
+            <img src="assets/up.svg" alt="Receita">
+          </div>
+          {{ income.paymentOrigin }}
+        </div>
+        <div class="cell">{{ income.category?.name || 'Sem categoria' }}</div>
+        <div class="cell">{{ formatDate(income.date) }}</div>
+        <div class="cell">{{ income.balanceSource }}</div>
+        <div class="cell income-amount">R$ {{ formatCurrency(income.amount) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes da Receita -->
+  <div class="modal-overlay" *ngIf="showTransactionModal" (click)="closeTransactionModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Detalhes da Receita</h2>
+        <button class="modal-close" (click)="closeTransactionModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body" *ngIf="selectedTransaction">
+        <div class="detail-item">
+          <span class="detail-label">Origem do pagamento</span>
+          <span class="detail-value">{{ selectedTransaction.paymentOrigin }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <span class="detail-label">Categoria</span>
+          <span class="detail-value">{{ selectedTransaction.category?.name || 'Sem categoria' }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <span class="detail-label">Data</span>
+          <span class="detail-value">{{ formatDate(selectedTransaction.date) }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <span class="detail-label">Conta</span>
+          <span class="detail-value">{{ selectedTransaction.balanceSource }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <span class="detail-label">Valor</span>
+          <span class="detail-value amount income">R$ {{ formatCurrency(selectedTransaction.amount) }}</span>
+        </div>
+        
+        <div class="detail-item" *ngIf="selectedTransaction.observation">
+          <span class="detail-label">Observação</span>
+          <span class="detail-value">{{ selectedTransaction.observation }}</span>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-modal primary" (click)="editIncomeFromModal()">
+          Editar
+        </button>
+        <button class="btn-modal danger" (click)="deleteIncomeFromModal()">
+          Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

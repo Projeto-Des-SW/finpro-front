@@ -2,7 +2,7 @@ import { Routes } from "@angular/router";
 import { RegisterComponent } from "./auth/register/register.component";
 import { LoginComponent } from "./auth/login/login.component";
 import { DashboardComponent } from "./dashboard/dashboard.component";
-import { IncomeListComponent } from "./income/income-list.component";
+import { IncomeComponent } from "./income/income.component";
 import { authGuard } from "./auth/auth.guard";
 import { HomeComponent } from "./home/home.component"; 
 import { ExpenseComponent } from "./expense/expense.component";
@@ -32,7 +32,7 @@ const routeConfig: Routes = [
     },
     {
         path: 'receitas',
-        component: IncomeListComponent,
+        component: IncomeComponent,
         title: 'Receitas - FinPro',
         canActivate: [authGuard]
     },

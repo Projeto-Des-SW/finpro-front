@@ -61,9 +61,9 @@ export class IncomeService {
       console.error('Erro ao buscar receitas:', error);
       
       if (this.isHttpErrorResponse(error)) {
-        console.log('📋 Status do erro:', error.status);
-        console.log('📋 URL do erro:', error.url);
-        console.log('📋 Detalhes do erro:', error.error);
+        console.log('Status do erro:', error.status);
+        console.log('URL do erro:', error.url);
+        console.log('Detalhes do erro:', error.error);
         
         const apiError = error.error as ApiError;
         const errorMessage = apiError?.description || 

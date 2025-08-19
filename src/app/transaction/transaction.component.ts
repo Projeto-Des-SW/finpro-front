@@ -159,7 +159,7 @@ export class TransactionComponent implements OnInit {
       // Força a atualização do estado do formulário
     });
 
-    console.log('🔄 Tipo de transação alterado para:', type);
+    console.log('Tipo de transação alterado para:', type);
   }
 
   // =================== CATEGORIAS DROPDOWN ===================
@@ -185,7 +185,7 @@ export class TransactionComponent implements OnInit {
     this.showCategoryDropdown = false;
     this.categoryError = '';
 
-    console.log('📁 Categoria selecionada:', category.name, 'ID:', categoryId);
+    console.log('Categoria selecionada:', category.name, 'ID:', categoryId);
   }
 
   async createNewCategory() {
@@ -219,7 +219,7 @@ export class TransactionComponent implements OnInit {
     this.categoryError = '';
 
     try {
-      console.log('🆕 Criando nova categoria:', this.newCategoryName.trim(), 'para tipo:', this.transactionType);
+      console.log('Criando nova categoria:', this.newCategoryName.trim(), 'para tipo:', this.transactionType);
 
       const newCategory = await this.transactionService.createCategory(
         this.transactionType,
@@ -235,10 +235,10 @@ export class TransactionComponent implements OnInit {
       // Limpar input
       this.newCategoryName = '';
 
-      console.log('✅ Nova categoria criada com sucesso:', newCategory);
+      console.log('Nova categoria criada com sucesso:', newCategory);
 
     } catch (error: any) {
-      console.error('❌ Erro ao criar categoria:', error);
+      console.error('Erro ao criar categoria:', error);
       this.categoryError = error.message || 'Erro ao criar categoria';
     } finally {
       this.creatingCategory = false;
@@ -275,7 +275,7 @@ export class TransactionComponent implements OnInit {
         // Preparar dados baseado no tipo
         const transactionData = this.prepareTransactionData(formData, categoryId);
 
-        console.log('💾 Salvando transação:', {
+        console.log('Salvando transação:', {
           tipo: this.transactionType,
           dados: transactionData,
           edicao: this.isEditing
@@ -288,11 +288,11 @@ export class TransactionComponent implements OnInit {
             this.editingTransactionId,
             transactionData
           );
-          console.log('✅ Transação atualizada com sucesso');
+          console.log('Transação atualizada com sucesso');
         } else {
           // Criar nova transação
           await this.transactionService.createTransaction(this.transactionType, transactionData);
-          console.log('✅ Nova transação criada com sucesso');
+          console.log('Nova transação criada com sucesso');
         }
 
         // Recarregar dados
@@ -305,7 +305,7 @@ export class TransactionComponent implements OnInit {
         this.showForm = false;
 
       } catch (error: any) {
-        console.error('❌ Erro ao salvar transação:', error);
+        console.error('Erro ao salvar transação:', error);
         this.errorMessage = error.message || 'Erro ao salvar transação';
       } finally {
         this.loading = false;
@@ -313,7 +313,7 @@ export class TransactionComponent implements OnInit {
     } else {
       this.transactionForm.markAllAsTouched();
       this.errorMessage = 'Por favor, preencha todos os campos obrigatórios';
-      console.log('⚠️ Formulário inválido:', this.transactionForm.errors);
+      console.log('Formulário inválido:', this.transactionForm.errors);
     }
   }
 
@@ -355,7 +355,7 @@ export class TransactionComponent implements OnInit {
     this.isEditing = false;
     this.editingTransactionId = null;
 
-    console.log('🔄 Formulário resetado');
+    console.log('Formulário resetado');
   }
 
   // =================== FILTROS E ABAS ===================
@@ -363,7 +363,7 @@ export class TransactionComponent implements OnInit {
   setActiveTab(tab: string) {
     this.activeTab = tab;
     this.applyFilters();
-    console.log('📋 Aba ativa alterada para:', tab);
+    console.log('Aba ativa alterada para:', tab);
   }
 
   clearAllFilters() {
@@ -379,7 +379,7 @@ export class TransactionComponent implements OnInit {
     this.showCustomDateRange = false;
     this.applyFilters();
 
-    console.log('🧹 Todos os filtros foram limpos');
+    console.log('Todos os filtros foram limpos');
   }
 
   onPeriodChange(period: string) {
@@ -400,7 +400,7 @@ export class TransactionComponent implements OnInit {
     }
 
     this.applyFilters();
-    console.log('📅 Período alterado:', period);
+    console.log('Período alterado:', period);
   }
 
   updateFilter(filterType: string, value: any) {
@@ -471,7 +471,7 @@ export class TransactionComponent implements OnInit {
     }
 
     this.filteredTransactions = filtered;
-    console.log(`🔍 Filtros aplicados: ${filtered.length} de ${this.allTransactions.length} transações`);
+    console.log(`Filtros aplicados: ${filtered.length} de ${this.allTransactions.length} transações`);
   }
 
   // =================== MODAL DE TRANSAÇÃO ===================
@@ -479,13 +479,13 @@ export class TransactionComponent implements OnInit {
   openTransactionModal(transaction: UnifiedTransaction) {
     this.selectedTransaction = transaction;
     this.showTransactionModal = true;
-    console.log('📝 Modal aberto para transação:', transaction);
+    console.log('Modal aberto para transação:', transaction);
   }
 
   closeTransactionModal() {
     this.showTransactionModal = false;
     this.selectedTransaction = null;
-    console.log('❌ Modal fechado');
+    console.log('Modal fechado');
   }
 
   editTransactionFromModal() {
@@ -498,7 +498,7 @@ export class TransactionComponent implements OnInit {
   async deleteTransactionFromModal() {
     if (this.selectedTransaction && confirm(`Tem certeza que deseja excluir esta ${this.selectedTransaction.type === 'INCOME' ? 'receita' : 'despesa'}?`)) {
       try {
-        console.log('🗑️ Excluindo transação:', this.selectedTransaction);
+        console.log('Excluindo transação:', this.selectedTransaction);
 
         await this.transactionService.deleteTransaction(this.selectedTransaction.type, this.selectedTransaction.id);
         await this.loadAllTransactions();
@@ -506,9 +506,9 @@ export class TransactionComponent implements OnInit {
         this.applyFilters();
         this.closeTransactionModal();
 
-        console.log('✅ Transação excluída com sucesso');
+        console.log('Transação excluída com sucesso');
       } catch (error: any) {
-        console.error('❌ Erro ao deletar transação:', error);
+        console.error('Erro ao deletar transação:', error);
         alert(error.message || 'Erro ao deletar transação');
       }
     }
@@ -541,8 +541,12 @@ export class TransactionComponent implements OnInit {
       });
       this.selectedCategoryName = transaction.category.name;
     }
+    
+    setTimeout(() => {
+    this.scrollToForm();
+  }, 100);
 
-    console.log('🔧 Modo de edição ativado para:', transaction);
+    console.log('Modo de edição ativado para:', transaction);
   }
 
   // =================== HELPERS ===================
@@ -569,4 +573,17 @@ export class TransactionComponent implements OnInit {
   formatCurrency(amount: number): string {
     return amount.toFixed(2).replace('.', ',');
   }
+
+private scrollToForm() {
+ const formElement = document.querySelector('.form-container');
+ if (formElement) {
+   const elementPosition = formElement.getBoundingClientRect().top + window.pageYOffset;
+   const offsetPosition = elementPosition - 80;
+   
+   window.scrollTo({
+     top: offsetPosition,
+     behavior: 'smooth'
+   });
+ }
+}
 }
