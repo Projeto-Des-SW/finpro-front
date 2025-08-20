@@ -1,0 +1,297 @@
+<div class="piggy-bank-container">
+  <header class="piggy-bank-header">
+    <h1>Cofrinhos</h1>
+    <button class="btn-new-piggy-bank" (click)="toggleForm()" [class.active]="showForm">
+      <ng-container *ngIf="!showForm">
+        <img src="assets/mais.svg" alt="Adicionar">
+        <span>Novo cofrinho</span>
+      </ng-container>
+
+      <ng-container *ngIf="showForm">
+        <span>Cancelar</span>
+      </ng-container>
+    </button>
+  </header>
+
+  <!-- Formulário de Novo/Editar Cofrinho -->
+  <div class="form-container" [class.show]="showForm">
+    <h2>{{ isEditing ? 'Editar Cofrinho' : 'Novo Cofrinho' }}</h2>
+    <form [formGroup]="piggyBankForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Nome do Cofrinho</label>
+          <input type="text" id="name" formControlName="name" placeholder="Ex: Viagem para Europa" required>
+          <div class="error" *ngIf="piggyBankForm.get('name')?.invalid && piggyBankForm.get('name')?.touched">
+            <span *ngIf="piggyBankForm.get('name')?.hasError('required')">Nome é obrigatório</span>
+            <span *ngIf="piggyBankForm.get('name')?.hasError('minlength')">Nome deve ter pelo menos 3 caracteres</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="savingsGoal">Meta de Economia</label>
+          <input type="number" id="savingsGoal" formControlName="savingsGoal" placeholder="0,00" step="0.01" required>
+          <div class="error"
+            *ngIf="piggyBankForm.get('savingsGoal')?.invalid && piggyBankForm.get('savingsGoal')?.touched">
+            <span *ngIf="piggyBankForm.get('savingsGoal')?.hasError('required')">Meta é obrigatória</span>
+            <span *ngIf="piggyBankForm.get('savingsGoal')?.hasError('min')">Meta deve ser maior que zero</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="monthlyDeposit">Depósito Mensal</label>
+          <input type="number" id="monthlyDeposit" formControlName="monthlyDeposit" placeholder="0,00" step="0.01"
+            required>
+          <div class="error"
+            *ngIf="piggyBankForm.get('monthlyDeposit')?.invalid && piggyBankForm.get('monthlyDeposit')?.touched">
+            <span *ngIf="piggyBankForm.get('monthlyDeposit')?.hasError('required')">Depósito mensal é obrigatório</span>
+            <span *ngIf="piggyBankForm.get('monthlyDeposit')?.hasError('min')">Depósito deve ser maior que zero</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="targetDate">Data Meta</label>
+          <input type="date" id="targetDate" formControlName="targetDate" required>
+          <div class="error"
+            *ngIf="piggyBankForm.get('targetDate')?.invalid && piggyBankForm.get('targetDate')?.touched">
+            Data meta é obrigatória
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="currentAmount">Valor Atual</label>
+          <input type="number" id="currentAmount" formControlName="currentAmount" placeholder="0,00" step="0.01">
+        </div>
+
+        <div class="form-group">
+          <label for="depositDay">Dia do Depósito</label>
+          <select id="depositDay" formControlName="depositDay">
+            <option value="">Selecione o dia</option>
+            <option *ngFor="let day of depositDays" [value]="day">{{ day }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-submit" [disabled]="piggyBankForm.invalid || loading">
+          {{ loading ? (isEditing ? 'Atualizando...' : 'Salvando...') : (isEditing ? 'Atualizar Cofrinho' : 'Salvar
+          Cofrinho') }}
+        </button>
+      </div>
+    </form>
+
+    <div class="error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-container">
+    <div class="filter-title">
+      <h3>Filtrar cofrinhos</h3>
+    </div>
+
+    <div class="filter-controls">
+      <div class="filter-group">
+        <label>Status</label>
+        <select [(ngModel)]="filters.status" (ngModelChange)="applyFilters()">
+          <option value="">Todos</option>
+          <option value="ON_TRACK">No prazo</option>
+          <option value="BEHIND">Atrasado</option>
+          <option value="COMPLETED">Concluído</option>
+        </select>
+      </div>
+
+      <div class="filter-group search-group">
+        <label>Busca</label>
+        <div class="search-input-wrapper">
+          <input type="text" placeholder="Buscar cofrinho" [(ngModel)]="filters.searchTerm"
+            (ngModelChange)="applyFilters()">
+          <img src="assets/lupa.svg" alt="Buscar" class="search-icon">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid de Cofrinhos -->
+  <div class="piggy-banks-section">
+    <h3>Seus cofrinhos</h3>
+    <p class="piggy-banks-subtitle">{{ filteredPiggyBanks.length }} cofrinhos encontrados</p>
+
+    <div *ngIf="filteredPiggyBanks.length === 0" class="no-piggy-banks">
+      <p>Nenhum cofrinho encontrado</p>
+    </div>
+
+    <div class="piggy-banks-grid" *ngIf="filteredPiggyBanks.length > 0">
+      <div *ngFor="let piggyBank of filteredPiggyBanks" class="piggy-bank-card"
+        [class.completed]="piggyBank.status === 'COMPLETED'" [class.behind]="piggyBank.status === 'BEHIND'"
+        [class.on-track]="piggyBank.status === 'ON_TRACK'" (click)="openPiggyBankModal(piggyBank)">
+
+        <div class="card-header">
+          <h4 class="piggy-bank-name">{{ piggyBank.name }}</h4>
+          <span class="status-badge" [class.completed]="piggyBank.status === 'COMPLETED'"
+            [class.behind]="piggyBank.status === 'BEHIND'" [class.on-track]="piggyBank.status === 'ON_TRACK'">
+            {{ getStatusLabel(piggyBank.status) }}
+          </span>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-bar-container">
+            <div class="progress-bar" [class.completed]="piggyBank.status === 'COMPLETED'"
+              [class.behind]="piggyBank.status === 'BEHIND'" [class.on-track]="piggyBank.status === 'ON_TRACK'"
+              [style.width.%]="getProgressPercentage(piggyBank)">
+            </div>
+          </div>
+          <div class="progress-text">
+            <span>Progresso</span>
+            <span class="progress-percentage">{{ getProgressPercentage(piggyBank) }}%</span>
+          </div>
+        </div>
+
+        <div class="amounts-section">
+          <div class="amount-row">
+            <span class="amount-label">Valor atual:</span>
+            <span class="amount-value current">R$ {{ formatCurrency(piggyBank.currentAmount) }}</span>
+          </div>
+          <div class="amount-row">
+            <span class="amount-label">Meta:</span>
+            <span class="amount-value goal">R$ {{ formatCurrency(piggyBank.savingsGoal) }}</span>
+          </div>
+          <div class="amount-row">
+            <span class="amount-label">Faltam:</span>
+            <span class="amount-value">R$ {{ formatCurrency(getRemainingAmount(piggyBank)) }}</span>
+          </div>
+        </div>
+
+        <div class="target-date">
+          <strong>Data meta:</strong> {{ formatDate(piggyBank.targetDate) }}
+        </div>
+
+        <div class="card-actions" (click)="$event.stopPropagation()">
+          <button class="btn-card-action btn-deposit" (click)="openDepositModal(piggyBank)"
+            [disabled]="piggyBank.status === 'COMPLETED'">
+            Depositar
+          </button>
+          <button class="btn-card-action btn-edit" (click)="editPiggyBank(piggyBank)">
+            Editar
+          </button>
+          <button class="btn-card-action btn-delete" (click)="deletePiggyBank(piggyBank.piggyBankId)">
+            Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes do Cofrinho -->
+  <div class="modal-overlay" *ngIf="showPiggyBankModal" (click)="closePiggyBankModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ selectedPiggyBank?.name }}</h2>
+        <button class="modal-close" (click)="closePiggyBankModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedPiggyBank">
+        <div class="detail-item">
+          <span class="detail-label">Status</span>
+          <span class="detail-value">{{ getStatusLabel(selectedPiggyBank.status) }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Progresso</span>
+          <span class="detail-value">{{ getProgressPercentage(selectedPiggyBank) }}%</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Valor atual</span>
+          <span class="detail-value">R$ {{ formatCurrency(selectedPiggyBank.currentAmount) }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Meta de economia</span>
+          <span class="detail-value">R$ {{ formatCurrency(selectedPiggyBank.savingsGoal) }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Valor restante</span>
+          <span class="detail-value">R$ {{ formatCurrency(getRemainingAmount(selectedPiggyBank)) }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Depósito mensal</span>
+          <span class="detail-value">R$ {{ formatCurrency(selectedPiggyBank.monthlyDeposit) }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Data meta</span>
+          <span class="detail-value">{{ formatDate(selectedPiggyBank.targetDate) }}</span>
+        </div>
+
+        <div class="detail-item" *ngIf="selectedPiggyBank.depositDay">
+          <span class="detail-label">Dia do depósito</span>
+          <span class="detail-value">{{ selectedPiggyBank.depositDay }}</span>
+        </div>
+
+        <div class="detail-item" *ngIf="selectedPiggyBank.lastDepositDate">
+          <span class="detail-label">Último depósito</span>
+          <span class="detail-value">{{ formatDate(selectedPiggyBank.lastDepositDate) }}</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-modal success" (click)="openDepositModal(selectedPiggyBank!)"
+          [disabled]="selectedPiggyBank?.status === 'COMPLETED'">
+          Fazer Depósito
+        </button>
+        <button class="btn-modal primary" (click)="editPiggyBankFromModal()">
+          Editar
+        </button>
+        <button class="btn-modal danger" (click)="deletePiggyBankFromModal()">
+          Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Depósito -->
+  <div class="modal-overlay" *ngIf="showDepositModal" (click)="closeDepositModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Fazer Depósito</h2>
+        <button class="modal-close" (click)="closeDepositModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedPiggyBankForDeposit">
+        <p><strong>Cofrinho:</strong> {{ selectedPiggyBankForDeposit.name }}</p>
+        <p><strong>Valor atual:</strong> R$ {{ formatCurrency(selectedPiggyBankForDeposit.currentAmount) }}</p>
+        <p><strong>Meta:</strong> R$ {{ formatCurrency(selectedPiggyBankForDeposit.savingsGoal) }}</p>
+
+        <div class="deposit-form">
+          <label for="depositAmount">Valor do depósito:</label>
+          <input type="number" id="depositAmount" class="deposit-input" [(ngModel)]="depositAmount" placeholder="0,00"
+            step="0.01" min="0.01">
+          <div class="error" *ngIf="depositError">
+            {{ depositError }}
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-modal success" (click)="confirmDeposit()"
+          [disabled]="!depositAmount || depositAmount <= 0 || loading">
+          {{ loading ? 'Processando...' : 'Confirmar Depósito' }}
+        </button>
+        <button class="btn-modal" (click)="closeDepositModal()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
