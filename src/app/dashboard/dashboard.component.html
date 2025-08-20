@@ -9,16 +9,21 @@
   </header>
 
   <!-- Error message -->
-  <div class="error-message" *ngIf="errorMessage">
+  @if (errorMessage) {
+  <div class="error-message">
     {{ errorMessage }}
     <button (click)="refreshData()">Tentar novamente</button>
   </div>
+  }
 
-  <div class="loading-state" *ngIf="loading">
+  @if (loading) {
+  <div class="loading-state">
     <p>Carregando dados do dashboard...</p>
   </div>
+  }
 
-  <section class="stats-section" *ngIf="!loading">
+  @if (!loading) {
+  <section class="stats-section">
     <div class="stats-grid">
       <div class="stat-card balance-card">
         <div class="stat-content">
@@ -57,19 +62,26 @@
       </div>
     </div>
   </section>
+  }
 
-  <section class="charts-section" *ngIf="!loading">
+  @if (!loading) {
+  <section class="charts-section">
 
-    <div class="error-message" *ngIf="chartsError">
+    @if (chartsError) {
+    <div class="error-message">
       {{ chartsError }}
       <button (click)="loadChartsData()">Tentar novamente</button>
     </div>
+    }
 
-    <div class="charts-loading" *ngIf="chartsLoading">
+    @if (chartsLoading) {
+    <div class="charts-loading">
       <p>Carregando gráficos...</p>
     </div>
+    }
 
-    <div class="charts-grid" *ngIf="!chartsLoading && !chartsError">
+    @if (!chartsLoading && !chartsError) {
+    <div class="charts-grid">
 
       <div class="top-charts-row">
         <div class="chart-card flow-chart">
@@ -91,13 +103,17 @@
             </div>
           </div>
 
-          <div class="chart-container" *ngIf="chartData.length > 0">
+          @if (chartData.length > 0) {
+          <div class="chart-container">
             <div class="chart-wrapper">
               <div class="chart-y-axis">
-                <div class="y-axis-label" *ngFor="let label of getYAxisLabels()">{{ label }}</div>
+                @for (label of getYAxisLabels(); track label) {
+                <div class="y-axis-label">{{ label }}</div>
+                }
               </div>
               <div class="chart-bars">
-                <div class="chart-month" *ngFor="let data of chartData">
+                @for (data of chartData; track data.month) {
+                <div class="chart-month">
                   <div class="bars-container">
                     <div class="bar-group">
                       <!-- Barra de Despesas -->
@@ -116,13 +132,17 @@
                   </div>
                   <div class="month-label">{{ data.month }}</div>
                 </div>
+                }
               </div>
             </div>
           </div>
+          }
 
-          <div class="no-data" *ngIf="chartData.length === 0">
+          @if (chartData.length === 0) {
+          <div class="no-data">
             <p>Nenhum dado disponível para o gráfico</p>
           </div>
+          }
         </div>
 
         <div class="recent-transactions-card" (click)="goToTransactions()">
@@ -132,11 +152,17 @@
           </div>
           <p class="subtitle">Você realizou {{ stats.transactionCount }} transações este mês</p>
 
-          <div class="transactions-list" *ngIf="recentTransactions.length > 0">
-            <div class="transaction-item" *ngFor="let transaction of recentTransactions">
+          @if (recentTransactions.length > 0) {
+          <div class="transactions-list">
+            @for (transaction of recentTransactions; track transaction.id) {
+            <div class="transaction-item">
               <div class="transaction-icon">
-                <img *ngIf="transaction.type === 'INCOME'" src="assets/up.svg" alt="Receita" class="icon-type">
-                <img *ngIf="transaction.type === 'EXPENSE'" src="assets/down.svg" alt="Despesa" class="icon-type">
+                @if (transaction.type === 'INCOME') {
+                <img src="assets/up.svg" alt="Receita" class="icon-type">
+                }
+                @if (transaction.type === 'EXPENSE') {
+                <img src="assets/down.svg" alt="Despesa" class="icon-type">
+                }
               </div>
               <div class="transaction-details">
                 <div class="transaction-name">{{ transaction.description }}</div>
@@ -148,15 +174,21 @@
                 {{ transaction.type === 'INCOME' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
               </div>
             </div>
+            }
           </div>
+          }
 
-          <div class="no-data" *ngIf="recentTransactions.length === 0">
+          @if (recentTransactions.length === 0) {
+          <div class="no-data">
             <p>Nenhuma transação encontrada</p>
           </div>
+          }
 
-          <div class="show-more" *ngIf="recentTransactions.length > 0">
+          @if (recentTransactions.length > 0) {
+          <div class="show-more">
             <span>Clique para ver todas as transações</span>
           </div>
+          }
         </div>
       </div>
 
@@ -167,8 +199,10 @@
           <h3>Gastos por categoria</h3>
           <p class="subtitle">Distribuição de despesas por categoria no mês atual</p>
 
-          <div class="category-chart" *ngIf="categoryData.length > 0">
-            <div class="category-item" *ngFor="let category of categoryData">
+          @if (categoryData.length > 0) {
+          <div class="category-chart">
+            @for (category of categoryData; track category.name) {
+            <div class="category-item">
               <div class="category-info">
                 <span class="category-name">{{ category.name }}</span>
                 <div class="category-values">
@@ -182,11 +216,15 @@
                 </div>
               </div>
             </div>
+            }
           </div>
+          }
 
-          <div class="no-data" *ngIf="categoryData.length === 0">
+          @if (categoryData.length === 0) {
+          <div class="no-data">
             <p>Nenhuma categoria de gastos encontrada</p>
           </div>
+          }
         </div>
 
         <!-- Receitas por categoria (gráfico de pizza) -->
@@ -194,16 +232,18 @@
           <h3>Receitas por categoria</h3>
           <p class="subtitle">Distribuição de receitas por categoria no mês atual</p>
 
-          <div class="pie-chart-container" *ngIf="incomeCategoryData.length > 0">
+          @if (incomeCategoryData.length > 0) {
+          <div class="pie-chart-container">
             <div class="pie-chart-wrapper">
               <div class="pie-chart">
                 <svg viewBox="0 0 200 200">
-                  <circle *ngFor="let segment of incomeCategoryData; let i = index" cx="100" cy="100" r="80" fill="none"
-                    [attr.stroke]="segment.color" stroke-width="40"
+                  @for (segment of incomeCategoryData; track segment.name; let i = $index) {
+                  <circle cx="100" cy="100" r="80" fill="none" [attr.stroke]="segment.color" stroke-width="40"
                     [attr.stroke-dasharray]="getStrokeDashArray(segment.percentage)"
                     [attr.stroke-dashoffset]="getStrokeDashOffset(i)" class="pie-segment-path"
                     [attr.title]="segment.name + ': ' + formatCurrency(segment.value)">
                   </circle>
+                  }
                 </svg>
               </div>
               <div class="pie-center">
@@ -213,16 +253,26 @@
             </div>
 
             <div class="pie-legend">
-              <div class="legend-item" *ngFor="let segment of incomeCategoryData">
+              @for (segment of incomeCategoryData; track segment.name) {
+              <div class="legend-item">
                 <span class="legend-color" [style.background-color]="segment.color"></span>
                 <span class="legend-label">{{ segment.name }} ({{ segment.percentage }}%)</span>
                 <span class="legend-amount">{{ formatCurrency(segment.value) }}</span>
               </div>
+              }
             </div>
           </div>
+          }
 
-          <div class="no-data" *ngIf="incomeCategoryData.length === 0">
+          @if (incomeCategoryData.length === 0) {
+          <div class="no-data">
             <p>Nenhuma categoria de receita encontrada</p>
           </div>
+          }
         </div>
       </div>
+    </div>
+    }
+  </section>
+  }
+</div>
