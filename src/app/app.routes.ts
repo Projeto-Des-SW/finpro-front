@@ -8,6 +8,7 @@ import { authGuard } from "./auth/auth.guard";
 import { HomeComponent } from "./home/home.component"; 
 import { ExpenseComponent } from "./expense/expense.component";
 import { TransactionComponent } from "./transaction/transaction.component";
+import { PiggyBankComponent } from "./piggy-bank/piggy-bank.component";
 import { LayoutComponent } from "./navbar/layout/layout.component";
 
 const routeConfig: Routes = [
@@ -67,6 +68,12 @@ const routeConfig: Routes = [
                 path: 'despesas',
                 component: ExpenseComponent,
                 title: 'Despesas - FinPro'
+            },
+            // /app/cofrinhos
+            {
+                path: 'cofrinhos',
+                component: PiggyBankComponent,
+                title: 'Cofrinhos - FinPro'
             }
         ]
     },
