@@ -37,6 +37,13 @@ interface RecentTransaction {
   account: string;
 }
 
+interface IncomeCategoryData {
+  name: string;
+  value: number;
+  percentage: number;
+  color: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -61,6 +68,7 @@ export class DashboardComponent implements OnInit {
   chartData: ChartData[] = [];
   categoryData: CategoryChartData[] = [];
   recentTransactions: RecentTransaction[] = [];
+  incomeCategoryData: CategoryChartData[] = [];
   
   loading = false;
   errorMessage = '';
@@ -127,6 +135,7 @@ export class DashboardComponent implements OnInit {
       console.log(`Estatísticas do mês ${currentMonth}/${currentYear}:`, this.stats);
 
       this.processRecentTransactions(currentMonthExpenses, currentMonthIncomes);
+      this.processIncomeCategoryData(currentMonthIncomes);
 
       await this.loadChartsData();
 
@@ -144,6 +153,7 @@ export class DashboardComponent implements OnInit {
       this.loading = false;
     }
   }
+
 
   // NOVO: Método para filtrar transações por mês específico
   private filterTransactionsByMonth(transactions: any[], year: number, month: number): any[] {
@@ -178,7 +188,7 @@ export class DashboardComponent implements OnInit {
       console.log(`Dados por categoria (${currentMonth}/${currentYear}):`, categoryExpenses);
 
       this.processMonthlyData(monthlyExpenses, monthlyIncomes);
-      this.processCategoryData(categoryExpenses);
+      this.processCategoryData(categoryExpenses); 
 
     } catch (error: any) {
       console.error('Erro ao carregar dados dos gráficos:', error);
@@ -235,6 +245,26 @@ export class DashboardComponent implements OnInit {
 
     console.log('Categorias processadas para o mês atual:', this.categoryData);
   }
+
+  private processIncomeCategoryData(incomes: any[]) {
+  const categoryMap = new Map<string, number>();
+  
+  incomes.forEach(income => {
+    const categoryName = income.incomeCategory?.name || income.category?.name || 'Sem categoria';
+    const currentAmount = categoryMap.get(categoryName) || 0;
+    categoryMap.set(categoryName, currentAmount + income.amount);
+  });
+
+  const total = Array.from(categoryMap.values()).reduce((sum, amount) => sum + amount, 0);
+  
+  this.incomeCategoryData = Array.from(categoryMap.entries()).map(([name, value], index) => ({
+    name,
+    value,
+    percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+    color: this.categoryColors[index % this.categoryColors.length]
+  }));
+} 
+
 
   private processRecentTransactions(expenses: any[], incomes: any[]) {
     const allTransactions: RecentTransaction[] = [];
@@ -344,4 +374,37 @@ export class DashboardComponent implements OnInit {
   goToTransactions() {
     this.router.navigate(['/app/transacoes']);
   }
+
+// Método para calcular o stroke-dasharray do gráfico de pizza
+getStrokeDashArray(percentage: number): string {
+  const circumference = 2 * Math.PI * 80; // r=80
+  const arcLength = (percentage / 100) * circumference;
+  return `${arcLength} ${circumference}`;
+}
+
+// Método para calcular o offset de cada segmento
+getStrokeDashOffset(index: number): number {
+  const circumference = 2 * Math.PI * 80;
+  let totalPercentage = 0;
+  
+  for (let i = 0; i < index; i++) {
+    totalPercentage += this.incomeCategoryData[i].percentage;
+  }
+  
+  return -(totalPercentage / 100) * circumference;
+}
+
+// Melhore o método existente getSegmentStart
+getSegmentStart(index: number): number {
+  let start = 0;
+  for (let i = 0; i < index; i++) {
+    start += this.incomeCategoryData[i].percentage;
+  }
+  return start;
+}
+
+// Mantenha o método getIncomeTotal existente
+getIncomeTotal(): number {
+  return this.incomeCategoryData.reduce((total, segment) => total + segment.value, 0);
+}
 }
