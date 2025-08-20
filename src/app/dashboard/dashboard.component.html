@@ -28,7 +28,7 @@
         <img class="stat-icon" src="/assets/saldo.svg" alt="">
       </div>
 
-      <div class="stat-card income-card" routerLink="/receitas">
+      <div class="stat-card income-card" routerLink="/app/receitas">
         <div class="stat-content">
           <h3>Receitas</h3>
           <p class="stat-value positive">{{ formatCurrency(stats.totalIncomes) }}</p>
@@ -38,7 +38,7 @@
       </div>
 
       <!-- Despesas -->
-      <div class="stat-card expense-card" routerLink="/despesas">
+      <div class="stat-card expense-card" routerLink="/app/despesas">
         <div class="stat-content">
           <h3>Despesas</h3>
           <p class="stat-value negative">{{ formatCurrency(stats.totalExpenses) }}</p>
@@ -161,73 +161,68 @@
       </div>
 
 
-<div class="bottom-charts-row">
-  <!-- Gastos por categoria (gráfico de barras) -->
-  <div class="category-chart-card">
-    <h3>Gastos por categoria</h3>
-    <p class="subtitle">Distribuição de despesas por categoria no mês atual</p>
+      <div class="bottom-charts-row">
+        <!-- Gastos por categoria (gráfico de barras) -->
+        <div class="category-chart-card">
+          <h3>Gastos por categoria</h3>
+          <p class="subtitle">Distribuição de despesas por categoria no mês atual</p>
 
-    <div class="category-chart" *ngIf="categoryData.length > 0">
-      <div class="category-item" *ngFor="let category of categoryData">
-        <div class="category-info">
-          <span class="category-name">{{ category.name }}</span>
-          <div class="category-values">
-            <span class="category-amount">{{ formatCurrency(category.value) }}</span>
-            <span class="category-percentage">{{ category.percentage }}%</span>
+          <div class="category-chart" *ngIf="categoryData.length > 0">
+            <div class="category-item" *ngFor="let category of categoryData">
+              <div class="category-info">
+                <span class="category-name">{{ category.name }}</span>
+                <div class="category-values">
+                  <span class="category-amount">{{ formatCurrency(category.value) }}</span>
+                  <span class="category-percentage">{{ category.percentage }}%</span>
+                </div>
+              </div>
+              <div class="category-bar">
+                <div class="category-progress" [style.width.%]="category.percentage"
+                  [style.background-color]="category.color">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="no-data" *ngIf="categoryData.length === 0">
+            <p>Nenhuma categoria de gastos encontrada</p>
           </div>
         </div>
-        <div class="category-bar">
-          <div class="category-progress" 
-               [style.width.%]="category.percentage"
-               [style.background-color]="category.color">
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="no-data" *ngIf="categoryData.length === 0">
-      <p>Nenhuma categoria de gastos encontrada</p>
-    </div>
-  </div>
+        <!-- Receitas por categoria (gráfico de pizza) -->
+        <div class="category-chart-card">
+          <h3>Receitas por categoria</h3>
+          <p class="subtitle">Distribuição de receitas por categoria no mês atual</p>
 
-  <!-- Receitas por categoria (gráfico de pizza) -->
-  <div class="category-chart-card">
-    <h3>Receitas por categoria</h3>
-    <p class="subtitle">Distribuição de receitas por categoria no mês atual</p>
-
-    <div class="pie-chart-container" *ngIf="incomeCategoryData.length > 0">
-      <div class="pie-chart-wrapper">
-        <div class="pie-chart">
-          <svg viewBox="0 0 200 200">
-            <circle *ngFor="let segment of incomeCategoryData; let i = index"
-                    cx="100" cy="100" r="80" 
-                    fill="none" 
-                    [attr.stroke]="segment.color" 
-                    stroke-width="40"
+          <div class="pie-chart-container" *ngIf="incomeCategoryData.length > 0">
+            <div class="pie-chart-wrapper">
+              <div class="pie-chart">
+                <svg viewBox="0 0 200 200">
+                  <circle *ngFor="let segment of incomeCategoryData; let i = index" cx="100" cy="100" r="80" fill="none"
+                    [attr.stroke]="segment.color" stroke-width="40"
                     [attr.stroke-dasharray]="getStrokeDashArray(segment.percentage)"
-                    [attr.stroke-dashoffset]="getStrokeDashOffset(i)"
-                    class="pie-segment-path"
+                    [attr.stroke-dashoffset]="getStrokeDashOffset(i)" class="pie-segment-path"
                     [attr.title]="segment.name + ': ' + formatCurrency(segment.value)">
-            </circle>
-          </svg>
-        </div>
-        <div class="pie-center">
-          <span class="pie-total">{{ formatCurrency(getIncomeTotal()) }}</span>
-          <span class="pie-label">Total</span>
-        </div>
-      </div>
-      
-      <div class="pie-legend">
-        <div class="legend-item" *ngFor="let segment of incomeCategoryData">
-          <span class="legend-color" [style.background-color]="segment.color"></span>
-          <span class="legend-label">{{ segment.name }} ({{ segment.percentage }}%)</span>
-          <span class="legend-amount">{{ formatCurrency(segment.value) }}</span>
-        </div>
-      </div>
-    </div>
+                  </circle>
+                </svg>
+              </div>
+              <div class="pie-center">
+                <span class="pie-total">{{ formatCurrency(getIncomeTotal()) }}</span>
+                <span class="pie-label">Total</span>
+              </div>
+            </div>
 
-    <div class="no-data" *ngIf="incomeCategoryData.length === 0">
-      <p>Nenhuma categoria de receita encontrada</p>
-    </div>
-  </div>
-</div>
+            <div class="pie-legend">
+              <div class="legend-item" *ngFor="let segment of incomeCategoryData">
+                <span class="legend-color" [style.background-color]="segment.color"></span>
+                <span class="legend-label">{{ segment.name }} ({{ segment.percentage }}%)</span>
+                <span class="legend-amount">{{ formatCurrency(segment.value) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="no-data" *ngIf="incomeCategoryData.length === 0">
+            <p>Nenhuma categoria de receita encontrada</p>
+          </div>
+        </div>
+      </div>
