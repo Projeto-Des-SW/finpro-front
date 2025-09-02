@@ -10,6 +10,7 @@ import { ExpenseComponent } from "./expense/expense.component";
 import { TransactionComponent } from "./transaction/transaction.component";
 import { PiggyBankComponent } from "./piggy-bank/piggy-bank.component";
 import { LayoutComponent } from "./navbar/layout/layout.component";
+import { EducationalContentComponent } from "./educational-content/educational-content.component";
 
 const routeConfig: Routes = [
     { 
@@ -74,6 +75,13 @@ const routeConfig: Routes = [
                 path: 'cofrinhos',
                 component: PiggyBankComponent,
                 title: 'Cofrinhos - FinPro'
+            },
+
+            // /app/conteudo-educacional
+            {
+                path: 'conteudo-educacional',
+                component: EducationalContentComponent,
+                title: 'Conteúdo Educacional - FinPro'
             }
         ]
     },
