@@ -1,0 +1,200 @@
+<div class="educational-container">
+  <header class="educational-header">
+    <h1>Conteúdo Educacional</h1>
+    <button class="btn-new-content" (click)="toggleForm()" [class.active]="showForm" *ngIf="isAdmin">
+      <ng-container *ngIf="!showForm">
+        <img src="assets/mais.svg" alt="Adicionar">
+        <span>Novo conteúdo</span>
+      </ng-container>
+
+      <ng-container *ngIf="showForm">
+        <span>Cancelar</span>
+      </ng-container>
+    </button>
+  </header>
+
+  <!-- Formulário de Novo/Editar Conteúdo (apenas para admins) -->
+  <div class="form-container" [class.show]="showForm" *ngIf="isAdmin">
+    <h2>{{ isEditing ? 'Editar Conteúdo' : 'Novo Conteúdo' }}</h2>
+    <form [formGroup]="contentForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="title">Título</label>
+          <input type="text" id="title" formControlName="title" placeholder="Digite o título" required>
+          <div class="error" *ngIf="contentForm.get('title')?.invalid && contentForm.get('title')?.touched">
+            <span *ngIf="contentForm.get('title')?.hasError('required')">Título é obrigatório</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Categoria</label>
+          <select id="category" formControlName="category" required>
+            <option value="">Selecione uma categoria</option>
+            <option value="Investimentos">Investimentos</option>
+            <option value="Educação Financeira">Educação Financeira</option>
+            <option value="Planejamento">Planejamento</option>
+            <option value="Economia">Economia</option>
+            <option value="Renda Fixa">Renda Fixa</option>
+            <option value="Renda Variável">Renda Variável</option>
+            <option value="Criptomoedas">Criptomoedas</option>
+            <option value="Fundos">Fundos</option>
+          </select>
+          <div class="error" *ngIf="contentForm.get('category')?.invalid && contentForm.get('category')?.touched">
+            <span *ngIf="contentForm.get('category')?.hasError('required')">Categoria é obrigatória</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="videoUrl">URL do Vídeo (opcional)</label>
+          <input type="url" id="videoUrl" formControlName="videoUrl" placeholder="https://youtube.com/watch?v=...">
+          <div class="error" *ngIf="contentForm.get('videoUrl')?.invalid && contentForm.get('videoUrl')?.touched">
+            URL inválida
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="fileUrl">URL do Arquivo (opcional)</label>
+          <input type="url" id="fileUrl" formControlName="fileUrl" placeholder="https://exemplo.com/arquivo.pdf">
+          <div class="error" *ngIf="contentForm.get('fileUrl')?.invalid && contentForm.get('fileUrl')?.touched">
+            URL inválida
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full-width">
+          <label for="description">Descrição</label>
+          <textarea id="description" formControlName="description" placeholder="Digite a descrição do conteúdo" required></textarea>
+          <div class="error" *ngIf="contentForm.get('description')?.invalid && contentForm.get('description')?.touched">
+            <span *ngIf="contentForm.get('description')?.hasError('required')">Descrição é obrigatória</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-submit" [disabled]="contentForm.invalid || loading">
+          {{ loading ? (isEditing ? 'Atualizando...' : 'Salvando...') : (isEditing ? 'Atualizar Conteúdo' : 'Salvar Conteúdo') }}
+        </button>
+      </div>
+    </form>
+
+    <div class="error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-container">
+    <div class="filter-title">
+      <h3>Filtrar conteúdo</h3>
+    </div>
+
+    <div class="filter-controls">
+      <div class="filter-group">
+        <label>Categoria</label>
+        <select [(ngModel)]="selectedCategory" (ngModelChange)="applyFilters()">
+          <option value="">Todas as categorias</option>
+          <option *ngFor="let category of uniqueCategories" [value]="category">
+            {{ category }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group search-group">
+        <label>Busca</label>
+        <div class="search-input-wrapper">
+          <input type="text" placeholder="Buscar conteúdo" [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()">
+          <img src="assets/lupa.svg" alt="Buscar" class="search-icon">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid de Conteúdo -->
+  <div class="content-section">
+    <h3>Explore o conteúdo educacional</h3>
+    <p class="content-subtitle">{{ filteredContents.length }} conteúdos encontrados</p>
+
+    <div *ngIf="filteredContents.length === 0" class="no-content">
+      <div class="empty-state-icon">📚</div>
+      <p>Nenhum conteúdo encontrado</p>
+      <p *ngIf="isAdmin">Que tal adicionar o primeiro conteúdo educacional?</p>
+    </div>
+
+    <div class="content-grid" *ngIf="filteredContents.length > 0">
+      <div *ngFor="let content of filteredContents" class="content-card">
+        <div class="card-header" [class.has-video]="content.videoUrl" (click)="openContentModal(content)">
+          <span class="category-badge">{{ content.category }}</span>
+          <div *ngIf="content.videoUrl" class="video-placeholder">🎬</div>
+          <div *ngIf="!content.videoUrl" class="content-icon">📖</div>
+        </div>
+
+        <div class="card-body">
+          <h4 class="content-title">{{ content.title }}</h4>
+          <p class="content-description">{{ content.description }}</p>
+
+          <div class="card-actions" (click)="$event.stopPropagation()">
+            <button class="btn-card-action btn-view" (click)="openContentModal(content)">
+              Visualizar
+            </button>
+            <button class="btn-card-action btn-edit" (click)="editContent(content)" *ngIf="isAdmin">
+              Editar
+            </button>
+            <button class="btn-card-action btn-delete" (click)="deleteContent(content.id)" *ngIf="isAdmin">
+              Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Visualização de Conteúdo -->
+  <div class="modal-overlay" *ngIf="showContentModal" (click)="closeContentModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ selectedContent?.title }}</h2>
+        <button class="modal-close" (click)="closeContentModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedContent">
+        <span class="modal-category">{{ selectedContent.category }}</span>
+        
+        <div class="modal-description">
+          {{ selectedContent.description }}
+        </div>
+
+        <!-- Vídeo do YouTube -->
+        <iframe 
+          *ngIf="selectedContent.videoUrl && getYouTubeEmbedUrl(selectedContent.videoUrl)"
+          class="modal-video"
+          [src]="getYouTubeEmbedUrl(selectedContent.videoUrl)"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>
+
+        <!-- Links para recursos -->
+        <div class="modal-links" *ngIf="selectedContent.videoUrl || selectedContent.fileUrl">
+          <a 
+            *ngIf="selectedContent.videoUrl" 
+            [href]="selectedContent.videoUrl" 
+            target="_blank" 
+            class="btn-link">
+            🎬 Assistir Vídeo
+          </a>
+          <a 
+            *ngIf="selectedContent.fileUrl" 
+            [href]="selectedContent.fileUrl" 
+            target="_blank" 
+            class="btn-link">
+            📄 Download do Arquivo
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
