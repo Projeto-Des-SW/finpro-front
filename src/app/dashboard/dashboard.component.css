@@ -21,7 +21,7 @@
 
 .header-actions {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   align-items: center;
 }
 
@@ -66,6 +66,36 @@
   text-decoration: none;
   padding: 12px 20px;
   font-weight: 600;
+}
+
+.btn-export-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #2E3CB3;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.btn-export-pdf:hover {
+  background: #1e2a8a;
+  transform: translateY(-1px);
+}
+
+.btn-export-pdf span {
+  display: block;
+  color: white;
+  font-weight: 600;
+  padding: 0;
+}
+
+.btn-export-pdf .btn-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .loading-state,
@@ -212,7 +242,7 @@
 
 .bottom-charts-row {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Dois gráficos lado a lado */
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
 }
 
@@ -629,6 +659,7 @@
   background: #f0f0f0;
   z-index: 1;
 }
+
 /* Estilos para o gráfico de pizza */
 .pie-chart-container {
   display: flex;
@@ -659,10 +690,8 @@
   clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 50% 100%);
   transform-origin: center;
   transform: rotate(calc(3.6deg * var(--start)));
-  background: conic-gradient(
-    var(--color) 0 calc(3.6deg * var(--value)),
-    transparent calc(3.6deg * var(--value)) 360deg
-  );
+  background: conic-gradient(var(--color) 0 calc(3.6deg * var(--value)),
+      transparent calc(3.6deg * var(--value)) 360deg);
 }
 
 .pie-center {
@@ -731,12 +760,12 @@
     flex-direction: column;
     text-align: center;
   }
-  
+
   .pie-chart-wrapper {
     width: 140px;
     height: 140px;
   }
-  
+
   .pie-center {
     width: 70px;
     height: 70px;
@@ -748,16 +777,16 @@
     width: 120px;
     height: 120px;
   }
-  
+
   .pie-center {
     width: 60px;
     height: 60px;
   }
-  
+
   .pie-total {
     font-size: 12px;
   }
-  
+
   .pie-label {
     font-size: 9px;
   }
@@ -765,7 +794,7 @@
 
 @media (max-width: 768px) {
   .bottom-charts-row {
-    grid-template-columns: 1fr; 
+    grid-template-columns: 1fr;
   }
 }
 
@@ -993,5 +1022,28 @@
 
   .month-label {
     font-size: 10px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+  }
+
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .btn-export-pdf {
+      padding: 10px 16px;
+    }
+
+    .btn-export-pdf span {
+      display: none;
+      /* Esconde o texto em mobile, mostra só o ícone */
+    }
+
+    .header-actions {
+      flex-direction: row;
+      gap: 10px;
+    }
   }
 }

@@ -2,13 +2,17 @@
   <header class="dashboard-header">
     <h1>Dashboard</h1>
     <div class="header-actions">
+      <button class="btn-export-pdf" (click)="openPdfExportModal()" title="Exportar relatório em PDF">
+        <img src="../assets/download.svg" alt="Exportar" class="btn-icon">
+        <span>Exportar PDF</span>
+      </button>
+
       <button class="btn-new-transaction">
         <a routerLink="/app/transacoes">+ Nova Transação</a>
       </button>
     </div>
   </header>
 
-  <!-- Error message -->
   @if (errorMessage) {
   <div class="error-message">
     {{ errorMessage }}
@@ -275,4 +279,5 @@
     }
   </section>
   }
+  <app-pdf-export-modal></app-pdf-export-modal>
 </div>

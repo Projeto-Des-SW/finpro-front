@@ -1,10 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { ExpenseService } from '../expense/expense.service';
 import { IncomeService } from '../income/income.service';
 import { DashboardService, MonthlyData, CategoryData } from './dashboard.service';
+import { PdfExportModalComponent } from '../shared/pdf-export-modal.component';
+
 
 interface DashboardStats {
   totalIncomes: number;
@@ -47,7 +49,7 @@ interface IncomeCategoryData {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PdfExportModalComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -69,11 +71,13 @@ export class DashboardComponent implements OnInit {
   categoryData: CategoryChartData[] = [];
   recentTransactions: RecentTransaction[] = [];
   incomeCategoryData: CategoryChartData[] = [];
-  
+
   loading = false;
   errorMessage = '';
   chartsLoading = false;
   chartsError = '';
+
+  readonly pdfExportModal = viewChild.required(PdfExportModalComponent);
 
   // Cores para as categorias
   private categoryColors = [
@@ -142,7 +146,7 @@ export class DashboardComponent implements OnInit {
     } catch (error: any) {
       console.error('Erro ao carregar estatísticas:', error);
       this.errorMessage = 'Erro ao carregar dados do dashboard';
-      
+
       this.stats = {
         totalIncomes: 0,
         totalExpenses: 0,
@@ -154,7 +158,9 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-
+  openPdfExportModal() {
+    this.pdfExportModal().open();
+  }
   // NOVO: Método para filtrar transações por mês específico
   private filterTransactionsByMonth(transactions: any[], year: number, month: number): any[] {
     return transactions.filter(transaction => {
@@ -174,7 +180,7 @@ export class DashboardComponent implements OnInit {
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear();
       const currentMonth = currentDate.getMonth() + 1; // 1-12
-      
+
       console.log(`Carregando dados dos gráficos para: ${currentMonth}/${currentYear}`);
 
       const [monthlyExpenses, monthlyIncomes, categoryExpenses] = await Promise.all([
@@ -188,7 +194,7 @@ export class DashboardComponent implements OnInit {
       console.log(`Dados por categoria (${currentMonth}/${currentYear}):`, categoryExpenses);
 
       this.processMonthlyData(monthlyExpenses, monthlyIncomes);
-      this.processCategoryData(categoryExpenses); 
+      this.processCategoryData(categoryExpenses);
 
     } catch (error: any) {
       console.error('Erro ao carregar dados dos gráficos:', error);
@@ -204,7 +210,7 @@ export class DashboardComponent implements OnInit {
 
     const chartData: ChartData[] = [];
     const currentDate = new Date();
-    
+
     for (let i = 3; i >= 0; i--) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
       const year = date.getFullYear();
@@ -247,23 +253,23 @@ export class DashboardComponent implements OnInit {
   }
 
   private processIncomeCategoryData(incomes: any[]) {
-  const categoryMap = new Map<string, number>();
-  
-  incomes.forEach(income => {
-    const categoryName = income.incomeCategory?.name || income.category?.name || 'Sem categoria';
-    const currentAmount = categoryMap.get(categoryName) || 0;
-    categoryMap.set(categoryName, currentAmount + income.amount);
-  });
+    const categoryMap = new Map<string, number>();
 
-  const total = Array.from(categoryMap.values()).reduce((sum, amount) => sum + amount, 0);
-  
-  this.incomeCategoryData = Array.from(categoryMap.entries()).map(([name, value], index) => ({
-    name,
-    value,
-    percentage: total > 0 ? Math.round((value / total) * 100) : 0,
-    color: this.categoryColors[index % this.categoryColors.length]
-  }));
-} 
+    incomes.forEach(income => {
+      const categoryName = income.incomeCategory?.name || income.category?.name || 'Sem categoria';
+      const currentAmount = categoryMap.get(categoryName) || 0;
+      categoryMap.set(categoryName, currentAmount + income.amount);
+    });
+
+    const total = Array.from(categoryMap.values()).reduce((sum, amount) => sum + amount, 0);
+
+    this.incomeCategoryData = Array.from(categoryMap.entries()).map(([name, value], index) => ({
+      name,
+      value,
+      percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+      color: this.categoryColors[index % this.categoryColors.length]
+    }));
+  }
 
 
   private processRecentTransactions(expenses: any[], incomes: any[]) {
@@ -295,9 +301,9 @@ export class DashboardComponent implements OnInit {
 
     const sortedTransactions = allTransactions
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
+
     this.recentTransactions = sortedTransactions.slice(0, 5);
-    
+
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     console.log(`Transações recentes do mês ${currentMonth}: ${this.recentTransactions.length} de ${sortedTransactions.length} total`);
@@ -305,19 +311,19 @@ export class DashboardComponent implements OnInit {
 
   getMaxValue(): number {
     if (this.chartData.length === 0) return 10000;
-    
+
     const maxIncome = Math.max(...this.chartData.map(d => d.receitas));
     const maxExpense = Math.max(...this.chartData.map(d => d.despesas));
     const maxBalance = Math.max(...this.chartData.map(d => Math.abs(d.saldo)));
-    
+
     const maxValue = Math.max(maxIncome, maxExpense, maxBalance, 1000);
-    return Math.ceil(maxValue / 1000) * 1000; 
+    return Math.ceil(maxValue / 1000) * 1000;
   }
 
   getYAxisLabels(): string[] {
     const maxValue = this.getMaxValue();
     const step = maxValue / 2;
-    
+
     return [
       this.formatCurrencyShort(maxValue),
       this.formatCurrencyShort(step),
@@ -375,36 +381,36 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/app/transacoes']);
   }
 
-// Método para calcular o stroke-dasharray do gráfico de pizza
-getStrokeDashArray(percentage: number): string {
-  const circumference = 2 * Math.PI * 80; // r=80
-  const arcLength = (percentage / 100) * circumference;
-  return `${arcLength} ${circumference}`;
-}
-
-// Método para calcular o offset de cada segmento
-getStrokeDashOffset(index: number): number {
-  const circumference = 2 * Math.PI * 80;
-  let totalPercentage = 0;
-  
-  for (let i = 0; i < index; i++) {
-    totalPercentage += this.incomeCategoryData[i].percentage;
+  // Método para calcular o stroke-dasharray do gráfico de pizza
+  getStrokeDashArray(percentage: number): string {
+    const circumference = 2 * Math.PI * 80; // r=80
+    const arcLength = (percentage / 100) * circumference;
+    return `${arcLength} ${circumference}`;
   }
-  
-  return -(totalPercentage / 100) * circumference;
-}
 
-// Melhore o método existente getSegmentStart
-getSegmentStart(index: number): number {
-  let start = 0;
-  for (let i = 0; i < index; i++) {
-    start += this.incomeCategoryData[i].percentage;
+  // Método para calcular o offset de cada segmento
+  getStrokeDashOffset(index: number): number {
+    const circumference = 2 * Math.PI * 80;
+    let totalPercentage = 0;
+
+    for (let i = 0; i < index; i++) {
+      totalPercentage += this.incomeCategoryData[i].percentage;
+    }
+
+    return -(totalPercentage / 100) * circumference;
   }
-  return start;
-}
 
-// Mantenha o método getIncomeTotal existente
-getIncomeTotal(): number {
-  return this.incomeCategoryData.reduce((total, segment) => total + segment.value, 0);
-}
+  // Melhore o método existente getSegmentStart
+  getSegmentStart(index: number): number {
+    let start = 0;
+    for (let i = 0; i < index; i++) {
+      start += this.incomeCategoryData[i].percentage;
+    }
+    return start;
+  }
+
+  // Mantenha o método getIncomeTotal existente
+  getIncomeTotal(): number {
+    return this.incomeCategoryData.reduce((total, segment) => total + segment.value, 0);
+  }
 }
