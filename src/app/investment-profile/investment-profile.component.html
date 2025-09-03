@@ -1,0 +1,154 @@
+<div class="investment-profile-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>Perfil do Investidor</h1>
+    <p class="subtitle">
+      Responda ao questionário abaixo para descobrirmos seu perfil de investidor e oferecermos recomendações personalizadas.
+    </p>
+  </div>
+
+  <!-- Perfil Existente -->
+  <div *ngIf="hasExistingProfile && currentStep === 1" class="existing-profile-card">
+    <h3>Seu Perfil Atual</h3>
+    <div class="profile-info">
+      <div class="profile-item">
+        <strong>Perfil de Risco:</strong> {{ getRiskProfileText(existingProfile!.riskProfile) }}
+      </div>
+      <div class="profile-item">
+        <strong>Tolerância ao Risco:</strong> {{ getRiskToleranceText(existingProfile!.riskTolerance) }}
+      </div>
+      <div class="profile-item">
+        <strong>Prazo de Investimento:</strong> {{ getInvestmentTermText(existingProfile!.investmentTerm) }}
+      </div>
+      <div class="profile-item">
+        <strong>Nível de Conhecimento:</strong> {{ getKnowledgeLevelText(existingProfile!.knowledgeLevel) }}
+      </div>
+      <div class="profile-item">
+        <strong>Pontuação:</strong> {{ existingProfile!.score }}
+      </div>
+    </div>
+    <p class="update-message">Deseja refazer o questionário para atualizar seu perfil?</p>
+  </div>
+
+  <!-- Progress Bar -->
+  <div *ngIf="currentStep <= totalSteps" class="progress-container">
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="(currentStep / totalSteps) * 100"></div>
+    </div>
+    <div class="step-info">
+      Etapa {{ currentStep }} de {{ totalSteps }}
+    </div>
+  </div>
+
+  <!-- Questionário -->
+  <div *ngIf="currentStep <= totalSteps" class="questionnaire-section">
+    <form [formGroup]="questionsForm" (ngSubmit)="nextStep()">
+      <div *ngFor="let question of questionsForCurrentStep" class="question-card">
+        <h3 class="question-title">{{ question.id }}. {{ question.text }}</h3>
+        
+        <div class="options-container">
+          <div 
+            *ngFor="let option of question.options" 
+            class="option-item"
+            [class.selected]="questionsForm.get('question_' + question.id)?.value == option.value"
+          >
+            <input 
+              type="radio" 
+              [id]="'q' + question.id + '_o' + option.value"
+              [formControlName]="'question_' + question.id" 
+              [value]="option.value"
+            >
+            <label [for]="'q' + question.id + '_o' + option.value">
+              {{ option.text }}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="navigation-buttons">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          *ngIf="currentStep > 1"
+          (click)="previousStep()"
+        >
+          Anterior
+        </button>
+        
+        <button 
+          type="submit" 
+          class="btn btn-primary"
+          [disabled]="!isStepValid() || loading"
+        >
+          <span *ngIf="loading" class="loading-spinner"></span>
+          {{ currentStep === totalSteps ? 'Finalizar' : 'Próxima' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Resultados -->
+  <div *ngIf="currentStep === 4 && calculationResult" class="results-section">
+    <div class="results-card">
+      <h2 class="results-title">Seu Perfil de Investidor</h2>
+      
+      <div class="result-grid">
+        <div class="result-item primary">
+          <div class="result-icon">🎯</div>
+          <h3>Perfil de Risco</h3>
+          <p class="result-value">{{ getRiskProfileText(calculationResult.riskProfile) }}</p>
+        </div>
+
+        <div class="result-item">
+          <div class="result-icon">📊</div>
+          <h3>Tolerância ao Risco</h3>
+          <p class="result-value">{{ getRiskToleranceText(calculationResult.riskTolerance) }}</p>
+        </div>
+
+        <div class="result-item">
+          <div class="result-icon">⏰</div>
+          <h3>Prazo de Investimento</h3>
+          <p class="result-value">{{ getInvestmentTermText(calculationResult.investmentTerm) }}</p>
+        </div>
+
+        <div class="result-item">
+          <div class="result-icon">🎓</div>
+          <h3>Nível de Conhecimento</h3>
+          <p class="result-value">{{ getKnowledgeLevelText(calculationResult.knowledgeLevel) }}</p>
+        </div>
+      </div>
+
+      <div class="score-display">
+        <h3>Pontuação Total</h3>
+        <div class="score-circle">
+          {{ calculationResult.totalScore }}
+        </div>
+      </div>
+
+      <!-- Recommendation -->
+      <div class="recommendation-card">
+        <h3>Recomendação</h3>
+        <p *ngIf="calculationResult.riskProfile === 'CONSERVATIVE'">
+          Como investidor conservador, recomendamos investimentos de baixo risco como títulos públicos, 
+          CDBs de grandes bancos e fundos de renda fixa.
+        </p>
+        <p *ngIf="calculationResult.riskProfile === 'MODERATE'">
+          Seu perfil moderado permite uma carteira mista com renda fixa e uma pequena parcela em renda variável, 
+          como fundos multimercado e ações de empresas consolidadas.
+        </p>
+        <p *ngIf="calculationResult.riskProfile === 'AGGRESSIVE'">
+          Como investidor arrojado, você pode diversificar em renda variável, incluindo ações, 
+          fundos de ações, ETFs e até investimentos no exterior.
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button class="btn btn-outline" (click)="retakeQuestionnaire()">
+          Refazer Questionário
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
