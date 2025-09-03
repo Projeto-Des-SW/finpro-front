@@ -11,6 +11,7 @@ import { TransactionComponent } from "./transaction/transaction.component";
 import { PiggyBankComponent } from "./piggy-bank/piggy-bank.component";
 import { LayoutComponent } from "./navbar/layout/layout.component";
 import { EducationalContentComponent } from "./educational-content/educational-content.component";
+import { InvestmentProfileComponent } from "./investment-profile/investment-profile.component";
 
 const routeConfig: Routes = [
     { 
@@ -82,6 +83,12 @@ const routeConfig: Routes = [
                 path: 'conteudo-educacional',
                 component: EducationalContentComponent,
                 title: 'Conteúdo Educacional - FinPro'
+            },
+            // /app/perfil-investimento
+            {
+                path: 'perfil-investimento',
+                component: InvestmentProfileComponent,
+                title: 'Perfil do Investidor - FinPro'
             }
         ]
     },

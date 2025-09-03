@@ -65,6 +65,14 @@
             <span class="menu-label" [class.hidden]="isCollapsed">Educacional</span>
           </a>
         </li>
+
+        <li class="menu-item">
+          <a [routerLink]="['/app/perfil-investimento']" routerLinkActive="active" class="menu-link"
+            [title]="isCollapsed ? 'Perfil Investimento' : ''">
+            <img src="/assets/chart-histogram.svg" alt="Perfil Investimento" class="menu-icon">
+            <span class="menu-label" [class.hidden]="isCollapsed">Perfil do Investidor</span>
+          </a>
+        </li>
       </ul>
     </div>
   </nav>
