@@ -562,6 +562,291 @@
   font-weight: 600;
 }
 
+.piggy-bank-section {
+  margin-bottom: 40px;
+}
+
+.piggy-bank-summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.piggy-bank-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.piggy-bank-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.piggy-bank-info h3 {
+  color: #000000;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.piggy-bank-subtitle {
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Grid de estatísticas principais */
+.piggy-stats-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.piggy-mini-stat {
+  text-align: center;
+  padding: 12px 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.piggy-mini-stat-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2E3CB3;
+  margin-bottom: 4px;
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.piggy-mini-stat-label {
+  font-size: 11px;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+/* Barra de progresso */
+.piggy-progress-section {
+  margin-bottom: 20px;
+}
+
+.piggy-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.piggy-progress-label {
+  font-size: 14px;
+  color: #000000;
+  font-weight: 600;
+}
+
+.piggy-progress-percentage {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2E3CB3;
+}
+
+.piggy-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.piggy-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2E3CB3, #1877F2);
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+/* Resumo de status dos cofrinhos */
+.piggy-status-summary {
+  margin-bottom: 20px;
+}
+
+.status-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.status-summary-item {
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.status-summary-item.completed {
+  background: #f8fff9;
+  border-color: #28a745;
+}
+
+.status-summary-item.on-track {
+  background: #f8f9ff;
+  border-color: #2E3CB3;
+}
+
+.status-summary-item.behind {
+  background: #fff8f8;
+  border-color: #dc3545;
+}
+
+.status-number {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.status-summary-item.completed .status-number {
+  color: #28a745;
+}
+
+.status-summary-item.on-track .status-number {
+  color: #2E3CB3;
+}
+
+.status-summary-item.behind .status-number {
+  color: #dc3545;
+}
+
+.status-label {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Footer */
+.piggy-bank-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.piggy-bank-cta {
+  color: #2E3CB3;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cta-arrow {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.piggy-bank-summary-card:hover .cta-arrow {
+  transform: translateX(2px);
+}
+
+/* Estado vazio */
+.piggy-empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+  margin-bottom: 20px;
+}
+
+.piggy-empty-state p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+.piggy-empty-state p:last-child {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .piggy-stats-mini-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .piggy-mini-stat {
+    padding: 10px 6px;
+  }
+  
+  .piggy-mini-stat-value {
+    font-size: 12px;
+  }
+  
+  .piggy-mini-stat-label {
+    font-size: 10px;
+  }
+  
+  .status-summary-grid {
+    gap: 8px;
+  }
+  
+  .status-summary-item {
+    padding: 10px 6px;
+  }
+  
+  .status-number {
+    font-size: 16px;
+  }
+  
+  .status-label {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .piggy-stats-mini-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  
+  .status-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .status-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    padding: 12px 16px;
+  }
+  
+  .status-number {
+    font-size: 18px;
+  }
+  
+  .status-label {
+    font-size: 11px;
+  }
+  
+  .piggy-bank-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
 
 .category-chart-card {
   background: white;
@@ -1038,7 +1323,6 @@
 
     .btn-export-pdf span {
       display: none;
-      /* Esconde o texto em mobile, mostra só o ícone */
     }
 
     .header-actions {
