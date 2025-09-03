@@ -4,9 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { ExpenseService } from '../expense/expense.service';
 import { IncomeService } from '../income/income.service';
-import { DashboardService, MonthlyData, CategoryData } from './dashboard.service';
+import { DashboardService, MonthlyData, CategoryData, PiggyBankSummaryData } from './dashboard.service';
 import { PdfExportModalComponent } from '../shared/pdf-export-modal.component';
-
 
 interface DashboardStats {
   totalIncomes: number;
@@ -71,6 +70,7 @@ export class DashboardComponent implements OnInit {
   categoryData: CategoryChartData[] = [];
   recentTransactions: RecentTransaction[] = [];
   incomeCategoryData: CategoryChartData[] = [];
+  piggyBankSummary: PiggyBankSummaryData | null = null;
 
   loading = false;
   errorMessage = '';
@@ -113,7 +113,7 @@ export class DashboardComponent implements OnInit {
         this.incomeService.getAllIncomes().catch(() => [])
       ]);
 
-      // CORRIGIDO: Calcular estatísticas apenas do mês atual
+      // Calcular estatísticas apenas do mês atual
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear();
       const currentMonth = currentDate.getMonth() + 1; // 1-12
@@ -141,6 +141,9 @@ export class DashboardComponent implements OnInit {
       this.processRecentTransactions(currentMonthExpenses, currentMonthIncomes);
       this.processIncomeCategoryData(currentMonthIncomes);
 
+      // Carregar dados dos cofrinhos
+      await this.loadPiggyBankSummary();
+
       await this.loadChartsData();
 
     } catch (error: any) {
@@ -158,10 +161,78 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  async loadPiggyBankSummary() {
+    try {
+      console.log('Carregando resumo dos cofrinhos...');
+      this.piggyBankSummary = await this.dashboardService.getPiggyBankSummary();
+      
+      if (this.piggyBankSummary) {
+        console.log('Resumo carregado com sucesso:', {
+          total: this.piggyBankSummary.totalPiggyBanks,
+          concluidos: this.piggyBankSummary.completedPiggyBanks,
+          noPrazo: this.piggyBankSummary.onTrackCount,
+          atrasados: this.piggyBankSummary.behindCount,
+          totalEconomizado: this.piggyBankSummary.totalSaved,
+          totalMetas: this.piggyBankSummary.totalGoals,
+          progresso: this.piggyBankSummary.progressPercentage + '%'
+        });
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar resumo dos cofrinhos:', error);
+      
+      // Estado vazio em caso de erro
+      this.piggyBankSummary = {
+        totalPiggyBanks: 0,
+        completedPiggyBanks: 0,
+        totalSaved: 0,
+        totalGoals: 0,
+        progressPercentage: 0,
+        onTrackCount: 0,
+        behindCount: 0
+      };
+    }
+  }
+
   openPdfExportModal() {
     this.pdfExportModal().open();
   }
-  // NOVO: Método para filtrar transações por mês específico
+
+  // =================== MÉTODOS DOS COFRINHOS ===================
+
+  getPiggyBankSubtitle(): string {
+    if (!this.piggyBankSummary || this.piggyBankSummary.totalPiggyBanks === 0) {
+      return 'Crie suas metas de economia';
+    }
+    
+    const total = this.piggyBankSummary.totalPiggyBanks;
+    const completed = this.piggyBankSummary.completedPiggyBanks;
+    
+    if (completed === total) {
+      return `Parabéns! Todos os ${total} cofrinhos concluídos`;
+    } else if (completed > 0) {
+      return `${completed} de ${total} cofrinhos concluídos`;
+    } else {
+      return `${total} cofrinho${total > 1 ? 's' : ''} em andamento`;
+    }
+  }
+
+  getRemainingToSave(): number {
+    if (!this.piggyBankSummary) return 0;
+    
+    const remaining = this.piggyBankSummary.totalGoals - this.piggyBankSummary.totalSaved;
+    return Math.max(remaining, 0);
+  }
+
+  getAverageProgress(): number {
+    if (!this.piggyBankSummary || this.piggyBankSummary.totalPiggyBanks === 0) {
+      return 0;
+    }
+    
+    return this.piggyBankSummary.progressPercentage;
+  }
+
+  // =================== MÉTODOS AUXILIARES ===================
+
   private filterTransactionsByMonth(transactions: any[], year: number, month: number): any[] {
     return transactions.filter(transaction => {
       const transactionDate = new Date(transaction.date);
@@ -271,7 +342,6 @@ export class DashboardComponent implements OnInit {
     }));
   }
 
-
   private processRecentTransactions(expenses: any[], incomes: any[]) {
     const allTransactions: RecentTransaction[] = [];
 
@@ -308,6 +378,8 @@ export class DashboardComponent implements OnInit {
     const currentMonth = currentDate.getMonth() + 1;
     console.log(`Transações recentes do mês ${currentMonth}: ${this.recentTransactions.length} de ${sortedTransactions.length} total`);
   }
+
+  // =================== MÉTODOS DE FORMATAÇÃO E CÁLCULO ===================
 
   getMaxValue(): number {
     if (this.chartData.length === 0) return 10000;
@@ -352,7 +424,6 @@ export class DashboardComponent implements OnInit {
     }).format(value);
   }
 
-
   formatDate(dateString: string): string {
     if (dateString.includes('T')) {
       return new Date(dateString).toLocaleDateString('pt-BR');
@@ -373,6 +444,8 @@ export class DashboardComponent implements OnInit {
     return description.charAt(0).toUpperCase();
   }
 
+  // =================== MÉTODOS DE NAVEGAÇÃO ===================
+
   refreshData() {
     this.loadDashboardData();
   }
@@ -381,14 +454,18 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/app/transacoes']);
   }
 
-  // Método para calcular o stroke-dasharray do gráfico de pizza
+  goToPiggyBanks() {
+    this.router.navigate(['/app/cofrinhos']);
+  }
+
+  // =================== MÉTODOS DO GRÁFICO DE PIZZA ===================
+
   getStrokeDashArray(percentage: number): string {
     const circumference = 2 * Math.PI * 80; // r=80
     const arcLength = (percentage / 100) * circumference;
     return `${arcLength} ${circumference}`;
   }
 
-  // Método para calcular o offset de cada segmento
   getStrokeDashOffset(index: number): number {
     const circumference = 2 * Math.PI * 80;
     let totalPercentage = 0;
@@ -400,7 +477,6 @@ export class DashboardComponent implements OnInit {
     return -(totalPercentage / 100) * circumference;
   }
 
-  // Melhore o método existente getSegmentStart
   getSegmentStart(index: number): number {
     let start = 0;
     for (let i = 0; i < index; i++) {
@@ -409,7 +485,6 @@ export class DashboardComponent implements OnInit {
     return start;
   }
 
-  // Mantenha o método getIncomeTotal existente
   getIncomeTotal(): number {
     return this.incomeCategoryData.reduce((total, segment) => total + segment.value, 0);
   }
