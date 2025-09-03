@@ -4,9 +4,9 @@
     <h2 class="app-title" [class.hidden]="isCollapsed">FinPro</h2>
     <button class="toggle-btn" (click)="toggleSidebar()">
       @if (!isCollapsed) {
-      <img src="/assets/menu-fechar.svg" alt="Fechar menu" class="toggle-icon">
+      <img src="/assets/open.svg" alt="Fechar menu" class="toggle-icon">
       } @else {
-      <img src="/assets/menu-hamburguer.svg" alt="Abrir menu" class="toggle-icon">
+      <img src="/assets/close.svg" alt="Abrir menu" class="toggle-icon">
       }
     </button>
   </div>
@@ -52,12 +52,13 @@
         <li class="menu-item">
           <a [routerLink]="['/app/cofrinhos']" routerLinkActive="active" class="menu-link"
             [title]="isCollapsed ? 'Cofrinhos' : ''">
-            <img src="/assets/cofrinho.svg" alt="Cofrinhos" class="menu-icon">
+            <img src="/assets/piggy.svg" alt="Cofrinhos" class="menu-icon">
             <span class="menu-label" [class.hidden]="isCollapsed">Cofrinhos</span>
 
           </a>
         </li>
-
+        <br>
+        <h3 class="section-title" [class.hidden]="isCollapsed">Investimentos</h3>
         <li class="menu-item">
           <a [routerLink]="['/app/conteudo-educacional']" routerLinkActive="active" class="menu-link"
             [title]="isCollapsed ? 'Conteúdo Educacional' : ''">
