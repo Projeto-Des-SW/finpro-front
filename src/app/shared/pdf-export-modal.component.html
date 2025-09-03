@@ -1,0 +1,114 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="close()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        Exportar Relatório PDF
+      </h2>
+      <button class="modal-close" (click)="close()">
+        <span>&times;</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Período -->
+      <div class="section">
+        <h3 class="section-title">Período do Relatório</h3>
+        <div class="period-options">
+          <div class="radio-group">
+            <label class="radio-option" [class.selected]="selectedPeriod === 'month'">
+              <input type="radio" name="period" value="month" [(ngModel)]="selectedPeriod" (change)="onPeriodChange()">
+              <span class="radio-label">Mês Atual</span>
+            </label>
+
+            <label class="radio-option" [class.selected]="selectedPeriod === 'quarter'">
+              <input type="radio" name="period" value="quarter" [(ngModel)]="selectedPeriod"
+                (change)="onPeriodChange()">
+              <span class="radio-label">Últimos 3 Meses</span>
+            </label>
+
+            <label class="radio-option" [class.selected]="selectedPeriod === 'year'">
+              <input type="radio" name="period" value="year" [(ngModel)]="selectedPeriod" (change)="onPeriodChange()">
+              <span class="radio-label">Ano Atual</span>
+            </label>
+
+            <label class="radio-option" [class.selected]="selectedPeriod === 'custom'">
+              <input type="radio" name="period" value="custom" [(ngModel)]="selectedPeriod" (change)="onPeriodChange()">
+              <span class="radio-label">Personalizado</span>
+            </label>
+          </div>
+
+          <div class="custom-dates" *ngIf="selectedPeriod === 'custom'">
+            <div class="date-input">
+              <label>Data Início</label>
+              <input type="date" [(ngModel)]="customStartDate" [max]="customEndDate">
+            </div>
+            <div class="date-input">
+              <label>Data Fim</label>
+              <input type="date" [(ngModel)]="customEndDate" [min]="customStartDate" [max]="today">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title">Conteúdo do Relatório</h3>
+        <p class="section-subtitle">Selecione as seções que deseja incluir no PDF</p>
+
+        <div class="checkbox-group">
+          <label class="checkbox-option" [class.checked]="options.includeSummary">
+            <input type="checkbox" [(ngModel)]="options.includeSummary">
+            <span class="checkbox-custom"></span>
+            <div class="option-content">
+              <span class="option-title">Resumo Financeiro</span>
+              <span class="option-description">Saldo, receitas e despesas totais</span>
+            </div>
+          </label>
+
+          <label class="checkbox-option" [class.checked]="options.includeCharts">
+            <input type="checkbox" [(ngModel)]="options.includeCharts">
+            <span class="checkbox-custom"></span>
+            <div class="option-content">
+              <span class="option-title">Gráficos e Análises</span>
+              <span class="option-description">Evolução mensal e distribuição por categorias</span>
+            </div>
+          </label>
+
+          <label class="checkbox-option" [class.checked]="options.includeCategories">
+            <input type="checkbox" [(ngModel)]="options.includeCategories">
+            <span class="checkbox-custom"></span>
+            <div class="option-content">
+              <span class="option-title">Top Categorias</span>
+              <span class="option-description">Principais categorias de gastos e receitas</span>
+            </div>
+          </label>
+
+          <label class="checkbox-option" [class.checked]="options.includeTransactions">
+            <input type="checkbox" [(ngModel)]="options.includeTransactions">
+            <span class="checkbox-custom"></span>
+            <div class="option-content">
+              <span class="option-title">Lista de Transações</span>
+              <span class="option-description">Detalhamento de todas as transações do período</span>
+            </div>
+          </label>
+
+          <label class="checkbox-option" [class.checked]="options.includePiggyBanks">
+            <input type="checkbox" [(ngModel)]="options.includePiggyBanks">
+            <span class="checkbox-custom"></span>
+            <div class="option-content">
+              <span class="option-title">Cofrinhos</span>
+              <span class="option-description">Status e progresso dos seus cofrinhos</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="close()">Cancelar</button>
+        <button class="btn-export" (click)="exportPDF()" [disabled]="!canExport() || isGenerating">
+          <img src="assets/download.svg" alt="Download" class="btn-icon" *ngIf="!isGenerating">
+          <span class="spinner" *ngIf="isGenerating"></span>
+          {{ isGenerating ? 'Gerando...' : 'Exportar PDF' }}
+        </button>
+      </div>
+    </div>
+  </div>
