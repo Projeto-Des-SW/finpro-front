@@ -6,6 +6,10 @@ import { ExpenseService } from '../expense/expense.service';
 import { IncomeService } from '../income/income.service';
 import { DashboardService, MonthlyData, CategoryData, PiggyBankSummaryData } from './dashboard.service';
 import { PdfExportModalComponent } from '../shared/pdf-export-modal.component';
+import { InvestmentProfileService } from '../investment-profile/investment-profile.service';
+import { InvestmentProfileComponent } from '../investment-profile/investment-profile.component';
+import { InvestorProfileResponseDTO } from '../entity/investment-profile';
+import { RiskProfile } from '../entity/investment-profile';
 
 interface DashboardStats {
   totalIncomes: number;
@@ -58,6 +62,7 @@ export class DashboardComponent implements OnInit {
   private expenseService = inject(ExpenseService);
   private incomeService = inject(IncomeService);
   private dashboardService = inject(DashboardService);
+  private investmentProfileService = inject(InvestmentProfileService);
 
   stats: DashboardStats = {
     totalIncomes: 0,
@@ -66,6 +71,7 @@ export class DashboardComponent implements OnInit {
     transactionCount: 0
   };
 
+  investorProfile: InvestorProfileResponseDTO | null = null;
   chartData: ChartData[] = [];
   categoryData: CategoryChartData[] = [];
   recentTransactions: RecentTransaction[] = [];
@@ -98,6 +104,7 @@ export class DashboardComponent implements OnInit {
     }
 
     this.loadDashboardData();
+    this.loadInvestorProfile();
   }
 
   async loadDashboardData() {
@@ -165,7 +172,7 @@ export class DashboardComponent implements OnInit {
     try {
       console.log('Carregando resumo dos cofrinhos...');
       this.piggyBankSummary = await this.dashboardService.getPiggyBankSummary();
-      
+
       if (this.piggyBankSummary) {
         console.log('Resumo carregado com sucesso:', {
           total: this.piggyBankSummary.totalPiggyBanks,
@@ -179,7 +186,7 @@ export class DashboardComponent implements OnInit {
       }
     } catch (error: any) {
       console.error('Erro ao carregar resumo dos cofrinhos:', error);
-      
+
       // Estado vazio em caso de erro
       this.piggyBankSummary = {
         totalPiggyBanks: 0,
@@ -193,6 +200,39 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  loadInvestorProfile() {
+    console.log('Carregando perfil do investidor...');
+
+    this.investmentProfileService.getCurrentUserProfile().subscribe({
+      next: (profile) => {
+        this.investorProfile = profile;
+        console.log('Perfil do investidor carregado com sucesso:', this.investorProfile);
+
+        // Log detalhado para debug
+        if (profile) {
+          console.log('Detalhes do perfil:', {
+            riskProfile: profile.riskProfile,
+            riskTolerance: profile.riskTolerance,
+            investmentTerm: profile.investmentTerm,
+            knowledgeLevel: profile.knowledgeLevel,
+            score: profile.score,
+            createdAt: profile.createdAt
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Erro ao carregar o perfil do investidor:', error);
+
+        if (error.status === 404) {
+          console.log('Usuário ainda não possui perfil de investidor');
+          this.investorProfile = null;
+        } else {
+          console.error('Erro inesperado ao carregar perfil:', error);
+          this.investorProfile = null;
+        }
+      }
+    });
+  }
   openPdfExportModal() {
     this.pdfExportModal().open();
   }
@@ -203,10 +243,10 @@ export class DashboardComponent implements OnInit {
     if (!this.piggyBankSummary || this.piggyBankSummary.totalPiggyBanks === 0) {
       return 'Crie suas metas de economia';
     }
-    
+
     const total = this.piggyBankSummary.totalPiggyBanks;
     const completed = this.piggyBankSummary.completedPiggyBanks;
-    
+
     if (completed === total) {
       return `Parabéns! Todos os ${total} cofrinhos concluídos`;
     } else if (completed > 0) {
@@ -218,7 +258,7 @@ export class DashboardComponent implements OnInit {
 
   getRemainingToSave(): number {
     if (!this.piggyBankSummary) return 0;
-    
+
     const remaining = this.piggyBankSummary.totalGoals - this.piggyBankSummary.totalSaved;
     return Math.max(remaining, 0);
   }
@@ -227,7 +267,7 @@ export class DashboardComponent implements OnInit {
     if (!this.piggyBankSummary || this.piggyBankSummary.totalPiggyBanks === 0) {
       return 0;
     }
-    
+
     return this.piggyBankSummary.progressPercentage;
   }
 
@@ -458,6 +498,16 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/app/cofrinhos']);
   }
 
+  goToInvestorProfile() {
+    console.log('Usuário autenticado?', this.authService.isAuthenticated());
+    console.log('Token válido?', !!this.authService.getToken());
+
+    this.router.navigate(['/app/perfil-investimento']).then(
+      (success) => console.log('Navegação bem-sucedida:', success),
+      (error) => console.error('Erro na navegação:', error)
+    );
+  }
+
   // =================== MÉTODOS DO GRÁFICO DE PIZZA ===================
 
   getStrokeDashArray(percentage: number): string {
@@ -487,5 +537,18 @@ export class DashboardComponent implements OnInit {
 
   getIncomeTotal(): number {
     return this.incomeCategoryData.reduce((total, segment) => total + segment.value, 0);
+  }
+
+  getRiskProfileText(riskProfile: RiskProfile): string {
+    switch (riskProfile) {
+      case 'CONSERVATIVE':
+        return 'Conservador';
+      case 'MODERATE':
+        return 'Moderado';
+      case 'AGGRESSIVE':
+        return 'Agressivo';
+      default:
+        return 'Não definido';
+    }
   }
 }
