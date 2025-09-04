@@ -1,4 +1,3 @@
-// src/app/app.routes.ts - VERSÃO FINAL CORRIGIDA
 import { Routes } from "@angular/router";
 import { RegisterComponent } from "./auth/register/register.component";
 import { LoginComponent } from "./auth/login/login.component";
@@ -12,6 +11,8 @@ import { PiggyBankComponent } from "./piggy-bank/piggy-bank.component";
 import { LayoutComponent } from "./navbar/layout/layout.component";
 import { EducationalContentComponent } from "./educational-content/educational-content.component";
 import { InvestmentCalculatorComponent } from "./investment-calculator/investment-calculator.component";
+import { InvestmentProfileComponent } from "./investment-profile/investment-profile.component";
+
 
 const routeConfig: Routes = [
     {
@@ -89,6 +90,12 @@ const routeConfig: Routes = [
                 path: 'calculadora',
                 component: InvestmentCalculatorComponent,
                 title: 'Calculadora de Investimentos - FinPro'
+            },
+            // /app/perfil-investimento
+            {
+                path: 'perfil-investimento',
+                component: InvestmentProfileComponent,
+                title: 'Perfil do Investidor - FinPro'
             }
         ]
     },
