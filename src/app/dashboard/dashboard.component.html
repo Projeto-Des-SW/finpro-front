@@ -274,95 +274,109 @@
           </div>
           }
         </div>
+        <!-- Perfil de Investidor -->
+        <div class="stat-card profile-card" (click)="goToInvestorProfile()">
+          <div class="stat-content">
+            <h3>Perfil de Investidor</h3>
+            @if (investorProfile) {
+            <p class="stat-value">{{ getRiskProfileText(investorProfile.riskProfile) }}</p>
+            <span class="stat-label">Clique para refazer o questionário</span>
+            } @else {
+            <p class="stat-value">Não definido</p>
+            <span class="stat-label">Responda o questionário</span>
+            }
+          </div>
+          <img class="stat-icon" src="/assets/chart-histogram.svg" alt="">
+        </div>
       </div>
     </div>
     }
   </section>
-@if (!loading) {
-<section class="piggy-bank-section">
-  <div class="piggy-bank-summary-card" (click)="goToPiggyBanks()">
-    <div class="piggy-bank-header">
-      <div class="piggy-bank-info">
-        <h3>Cofrinhos</h3>
-        <p class="piggy-bank-subtitle">{{ getPiggyBankSubtitle() }}</p>
-      </div>
-      <span class="view-all-indicator">→</span>
-    </div>
-
-    @if (piggyBankSummary && piggyBankSummary.totalPiggyBanks > 0) {
-    <!-- Estatísticas principais -->
-    <div class="piggy-stats-mini-grid">
-      <div class="piggy-mini-stat">
-        <div class="piggy-mini-stat-value">{{ formatCurrency(piggyBankSummary.totalSaved) }}</div>
-        <div class="piggy-mini-stat-label">Economizado</div>
-      </div>
-      <div class="piggy-mini-stat">
-        <div class="piggy-mini-stat-value">{{ formatCurrency(piggyBankSummary.totalGoals) }}</div>
-        <div class="piggy-mini-stat-label">Meta Total</div>
-      </div>
-      <div class="piggy-mini-stat">
-        <div class="piggy-mini-stat-value">{{ formatCurrency(getRemainingToSave()) }}</div>
-        <div class="piggy-mini-stat-label">Falta Economizar</div>
-      </div>
-      <div class="piggy-mini-stat">
-        <div class="piggy-mini-stat-value">{{ getAverageProgress() }}%</div>
-        <div class="piggy-mini-stat-label">Progresso Médio</div>
-      </div>
-    </div>
-
-    <!-- Barra de progresso geral -->
-    <div class="piggy-progress-section">
-      <div class="piggy-progress-header">
-        <span class="piggy-progress-label">Progresso Geral das Metas</span>
-        <span class="piggy-progress-percentage">{{ piggyBankSummary.progressPercentage }}%</span>
-      </div>
-      <div class="piggy-progress-bar">
-        <div class="piggy-progress-fill" [style.width.%]="piggyBankSummary.progressPercentage"></div>
-      </div>
-    </div>
-
-    <!-- Status dos cofrinhos -->
-    <div class="piggy-status-summary">
-      <div class="status-summary-grid">
-        <div class="status-summary-item completed">
-          <span class="status-number">{{ piggyBankSummary.completedPiggyBanks }}</span>
-          <span class="status-label">Concluído{{ piggyBankSummary.completedPiggyBanks !== 1 ? 's' : '' }}</span>
+  @if (!loading) {
+  <section class="piggy-bank-section">
+    <div class="piggy-bank-summary-card" (click)="goToPiggyBanks()">
+      <div class="piggy-bank-header">
+        <div class="piggy-bank-info">
+          <h3>Cofrinhos</h3>
+          <p class="piggy-bank-subtitle">{{ getPiggyBankSubtitle() }}</p>
         </div>
-        <div class="status-summary-item on-track">
-          <span class="status-number">{{ piggyBankSummary.onTrackCount }}</span>
-          <span class="status-label">No Prazo</span>
+        <span class="view-all-indicator">→</span>
+      </div>
+
+      @if (piggyBankSummary && piggyBankSummary.totalPiggyBanks > 0) {
+      <!-- Estatísticas principais -->
+      <div class="piggy-stats-mini-grid">
+        <div class="piggy-mini-stat">
+          <div class="piggy-mini-stat-value">{{ formatCurrency(piggyBankSummary.totalSaved) }}</div>
+          <div class="piggy-mini-stat-label">Economizado</div>
         </div>
-        <div class="status-summary-item behind">
-          <span class="status-number">{{ piggyBankSummary.behindCount }}</span>
-          <span class="status-label">Atrasado{{ piggyBankSummary.behindCount !== 1 ? 's' : '' }}</span>
+        <div class="piggy-mini-stat">
+          <div class="piggy-mini-stat-value">{{ formatCurrency(piggyBankSummary.totalGoals) }}</div>
+          <div class="piggy-mini-stat-label">Meta Total</div>
+        </div>
+        <div class="piggy-mini-stat">
+          <div class="piggy-mini-stat-value">{{ formatCurrency(getRemainingToSave()) }}</div>
+          <div class="piggy-mini-stat-label">Falta Economizar</div>
+        </div>
+        <div class="piggy-mini-stat">
+          <div class="piggy-mini-stat-value">{{ getAverageProgress() }}%</div>
+          <div class="piggy-mini-stat-label">Progresso Médio</div>
         </div>
       </div>
-    </div>
 
-    <div class="piggy-bank-footer">
-      <span class="piggy-bank-cta">
-        <span>Gerenciar cofrinhos</span>
-        <span class="cta-arrow">→</span>
-      </span>
-    </div>
-    }
+      <!-- Barra de progresso geral -->
+      <div class="piggy-progress-section">
+        <div class="piggy-progress-header">
+          <span class="piggy-progress-label">Progresso Geral das Metas</span>
+          <span class="piggy-progress-percentage">{{ piggyBankSummary.progressPercentage }}%</span>
+        </div>
+        <div class="piggy-progress-bar">
+          <div class="piggy-progress-fill" [style.width.%]="piggyBankSummary.progressPercentage"></div>
+        </div>
+      </div>
 
-    @if (!piggyBankSummary || piggyBankSummary.totalPiggyBanks === 0) {
-    <div class="piggy-empty-state">
-      <p>Nenhum cofrinho encontrado</p>
-      <p>Crie seu primeiro cofrinho para começar a economizar!</p>
+      <!-- Status dos cofrinhos -->
+      <div class="piggy-status-summary">
+        <div class="status-summary-grid">
+          <div class="status-summary-item completed">
+            <span class="status-number">{{ piggyBankSummary.completedPiggyBanks }}</span>
+            <span class="status-label">Concluído{{ piggyBankSummary.completedPiggyBanks !== 1 ? 's' : '' }}</span>
+          </div>
+          <div class="status-summary-item on-track">
+            <span class="status-number">{{ piggyBankSummary.onTrackCount }}</span>
+            <span class="status-label">No Prazo</span>
+          </div>
+          <div class="status-summary-item behind">
+            <span class="status-number">{{ piggyBankSummary.behindCount }}</span>
+            <span class="status-label">Atrasado{{ piggyBankSummary.behindCount !== 1 ? 's' : '' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="piggy-bank-footer">
+        <span class="piggy-bank-cta">
+          <span>Gerenciar cofrinhos</span>
+          <span class="cta-arrow">→</span>
+        </span>
+      </div>
+      }
+
+      @if (!piggyBankSummary || piggyBankSummary.totalPiggyBanks === 0) {
+      <div class="piggy-empty-state">
+        <p>Nenhum cofrinho encontrado</p>
+        <p>Crie seu primeiro cofrinho para começar a economizar!</p>
+      </div>
+
+      <div class="piggy-bank-footer">
+        <span class="piggy-bank-cta">
+          <span>Criar primeiro cofrinho</span>
+          <span class="cta-arrow">→</span>
+        </span>
+      </div>
+      }
     </div>
-    
-    <div class="piggy-bank-footer">
-      <span class="piggy-bank-cta">
-        <span>Criar primeiro cofrinho</span>
-        <span class="cta-arrow">→</span>
-      </span>
-    </div>
-    }
-  </div>
-</section>
-}
+  </section>
+  }
   }
   <app-pdf-export-modal></app-pdf-export-modal>
 </div>

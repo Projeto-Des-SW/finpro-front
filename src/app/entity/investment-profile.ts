@@ -1,5 +1,3 @@
-// src/app/entity/investment-profile.ts
-
 export type RiskProfile = 'CONSERVATIVE' | 'MODERATE' | 'AGGRESSIVE';
 export type RiskTolerance = 'LOW' | 'MEDIUM' | 'HIGH';
 export type InvestmentTerm = 'SHORT_TERM' | 'MEDIUM_TERM' | 'LONG_TERM';
@@ -28,6 +26,7 @@ export interface InvestorProfileRequestDTO {
   investmentTerm: InvestmentTerm;
   knowledgeLevel: KnowledgeLevel;
   score: number;
+  answers: QuestionnaireAnswer[];
 }
 
 export interface InvestorProfileResponseDTO {
@@ -55,3 +54,4 @@ export interface QuestionOption {
   text: string;
   score: number;
 }
+

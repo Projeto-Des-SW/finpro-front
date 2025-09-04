@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-
 import { InvestmentProfileService } from './investment-profile.service';
+
 import {
     QuestionnaireResponseDTO,
     QuestionnaireAnswer,
@@ -114,6 +114,10 @@ export class InvestmentProfileComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        console.log('InvestmentProfileComponent inicializado');
+    }
+
+    checkExistingProfile(): void {
         this.loadExistingProfile();
     }
 
@@ -128,15 +132,27 @@ export class InvestmentProfileComponent implements OnInit {
     }
 
     loadExistingProfile(): void {
+        console.log('Carregando perfil existente...');
+
         this.investmentProfileService.getCurrentUserProfile().subscribe({
             next: (profile) => {
+                console.log('Perfil carregado com sucesso:', profile);
                 if (profile) {
                     this.hasExistingProfile = true;
                     this.existingProfile = profile;
                 }
             },
             error: (error) => {
-                console.log('Nenhum perfil encontrado ou erro:', error);
+                console.log('Erro ao carregar perfil - Status:', error.status);
+                console.log('Detalhes do erro:', error);
+
+                if (error.status === 404) {
+                    console.log('Usuário não possui perfil ainda - normal');
+                    this.hasExistingProfile = false;
+                    return;
+                }
+
+                console.warn('Erro ao carregar perfil, mas continuando:', error);
                 this.hasExistingProfile = false;
             }
         });
@@ -203,12 +219,24 @@ export class InvestmentProfileComponent implements OnInit {
     saveProfile(): void {
         if (!this.calculationResult) return;
 
+        const answers: QuestionnaireAnswer[] = [];
+        this.questions.forEach(question => {
+            const value = this.questionsForm.get(`question_${question.id}`)?.value;
+            if (value) {
+                answers.push({
+                    questionId: question.id,
+                    selectedValue: parseInt(value)
+                });
+            }
+        });
+
         const profileRequest: InvestorProfileRequestDTO = {
             riskProfile: this.calculationResult.riskProfile,
             riskTolerance: this.calculationResult.riskTolerance,
             investmentTerm: this.calculationResult.investmentTerm,
             knowledgeLevel: this.calculationResult.knowledgeLevel,
-            score: this.calculationResult.totalScore
+            score: this.calculationResult.totalScore,
+            answers: answers
         };
 
         this.investmentProfileService.saveProfile(profileRequest).subscribe({
@@ -228,10 +256,9 @@ export class InvestmentProfileComponent implements OnInit {
     }
 
     goToDashboard(): void {
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/app/dashboard']);
     }
 
-    // Métodos para conversão de enums em texto
     getRiskProfileText(riskProfile: RiskProfile): string {
         switch (riskProfile) {
             case 'CONSERVATIVE':
