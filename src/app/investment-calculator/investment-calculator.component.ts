@@ -3,20 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
-import {
-  InvestmentService,
-  InvestmentSimulationDTO,
-  InvestmentSimulationResponseDTO,
-  InvestmentType
-} from './investment.service';
-
-interface SimulationResult {
-  valorFinal: number;
-  totalInvestido: number;
-  rendimentoTotal: number;
-  taxaEfetivaAnual: number;
-  taxaEfetivaMensal: number;
-}
+import { InvestmentSimulationDTO, InvestmentType, SimulationResult} from '../entity/investiment-calculator';
+import { InvestmentService } from './investment.service';
 
 @Component({
   selector: 'app-investment-calculator',
@@ -33,7 +21,6 @@ export class InvestmentCalculatorComponent implements OnInit {
 
   calculatorForm: FormGroup;
   simulationResult: SimulationResult | null = null;
-  
   calculating = false;
   errorMessage = '';
   

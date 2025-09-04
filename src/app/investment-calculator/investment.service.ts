@@ -2,42 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-// Interfaces baseadas no seu backend
-export interface InvestmentSimulationDTO {
-  startValue: number;
-  monthlyValue: number;
-  months: number;
-  investmentType: InvestmentType;
-  percentInvestmentType: number;
-}
-
-export interface InvestmentSimulationResponseDTO {
-  valorFinal: number;
-  totalInvestido: number;
-  rendimentoTotal: number;
-  taxaEfetivaAnual: number;
-  taxaEfetivaMensal: number;
-}
-
-export interface InvestmentRecommendationDTO {
-  riskProfile: RiskProfile;
-  recommendations: string[];
-}
-
-// Enums (você precisa confirmar os valores exatos)
-export enum InvestmentType {
-  SELIC = 'SELIC',
-  CDI = 'CDI',
-  IPCA = 'IPCA'
-  // Adicione os outros tipos conforme seu enum
-}
-
-export enum RiskProfile {
-  CONSERVATIVE = 'CONSERVATIVE',
-  MODERATE = 'MODERATE',
-  AGGRESSIVE = 'AGGRESSIVE'
-}
+import { InvestmentType, RiskProfile, InvestmentRecommendationDTO,InvestmentSimulationResponseDTO, InvestmentSimulationDTO } from '../entity/investiment-calculator';
 
 @Injectable({
   providedIn: 'root'
