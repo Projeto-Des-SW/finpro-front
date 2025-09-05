@@ -1,0 +1,263 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Calculadora de Investimentos</h1>
+  </header>
+
+  @if (errorMessage) {
+  <div class="error-message">
+    {{ errorMessage }}
+    <button (click)="onCalculate()">Tentar novamente</button>
+  </div>
+  }
+
+  <!-- Seção do Formulário -->
+  <section class="calculator-section">
+    <div class="calculator-grid">
+      
+      <!-- Card do Formulário -->
+      <div class="form-card">
+        <div class="card-header">
+          <h2>Simular Investimento</h2>
+          <p class="card-subtitle">Calcule o potencial de crescimento do seu investimento</p>
+        </div>
+
+        <form [formGroup]="calculatorForm" (ngSubmit)="onCalculate()" class="calculator-form">
+          
+          <!-- Valor Inicial -->
+          <div class="form-group">
+            <label for="startValue">Valor inicial</label>
+            <div class="input-wrapper">
+              <span class="input-prefix">R$</span>
+              <input
+                id="startValue"
+                type="number"
+                formControlName="startValue"
+                class="form-control"
+                [class.error]="hasFieldError('startValue')"
+                placeholder="10.000,00"
+                min="100"
+                step="100"
+              />
+            </div>
+            @if (hasFieldError('startValue')) {
+            <span class="error-text">{{ getFieldError('startValue') }}</span>
+            }
+          </div>
+
+          <!-- Aporte Mensal -->
+          <div class="form-group">
+            <label for="monthlyValue">Aporte mensal</label>
+            <div class="input-wrapper">
+              <span class="input-prefix">R$</span>
+              <input
+                id="monthlyValue"
+                type="number"
+                formControlName="monthlyValue"
+                class="form-control"
+                [class.error]="hasFieldError('monthlyValue')"
+                placeholder="500,00"
+                min="0"
+                step="50"
+              />
+            </div>
+            @if (hasFieldError('monthlyValue')) {
+            <span class="error-text">{{ getFieldError('monthlyValue') }}</span>
+            }
+            <span class="input-help">Valor que você pretende investir mensalmente</span>
+          </div>
+
+          <!-- Período -->
+          <div class="form-group">
+            <label for="months">Período do investimento</label>
+            <select
+              id="months"
+              formControlName="months"
+              class="form-control"
+              [class.error]="hasFieldError('months')"
+            >
+              @for (option of periodOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            @if (hasFieldError('months')) {
+            <span class="error-text">{{ getFieldError('months') }}</span>
+            }
+            <span class="input-help">Duração total: {{ totalTimeDescription }}</span>
+          </div>
+
+          <!-- Tipo de Investimento -->
+          <div class="form-group">
+            <label for="investmentType">Tipo de investimento</label>
+            <select
+              id="investmentType"
+              formControlName="investmentType"
+              class="form-control"
+              [class.error]="hasFieldError('investmentType')"
+            >
+              @for (type of investmentTypes; track type.value) {
+              <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+            @if (hasFieldError('investmentType')) {
+            <span class="error-text">{{ getFieldError('investmentType') }}</span>
+            }
+            <span class="input-help">Indexador: {{ selectedInvestmentLabel }}</span>
+          </div>
+
+          <!-- Percentual do Indexador -->
+          <div class="form-group">
+            <label for="percentInvestmentType">Percentual do indexador</label>
+            <div class="input-wrapper">
+              <input
+                id="percentInvestmentType"
+                type="number"
+                formControlName="percentInvestmentType"
+                class="form-control"
+                [class.error]="hasFieldError('percentInvestmentType')"
+                placeholder="100"
+                min="1"
+                max="200"
+                step="0.1"
+              />
+              <span class="input-suffix">%</span>
+            </div>
+            @if (hasFieldError('percentInvestmentType')) {
+            <span class="error-text">{{ getFieldError('percentInvestmentType') }}</span>
+            }
+            <span class="input-help">Exemplo: 100% do CDI, 120% do CDI</span>
+          </div>
+
+          <!-- Botões de Ação -->
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="onClear()"
+              [disabled]="calculating"
+            >
+              Limpar
+            </button>
+            
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="calculating || calculatorForm.invalid"
+            >
+              @if (calculating) {
+              <span>Calculando...</span>
+              } @else {
+              <span>Calcular</span>
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Card dos Resultados -->
+      <div class="results-card" [class.visible]="simulationResult">
+        @if (simulationResult) {
+        <div class="card-header">
+          <h2>Resultado da Simulação</h2>
+          <p class="card-subtitle">Projeção baseada nas condições atuais</p>
+        </div>
+
+        <div class="results-content">
+          
+          <!-- Estatísticas Principais -->
+          <div class="results-stats">
+            <div class="stat-item">
+              <div class="stat-icon" style="background: #e3f2fd;">
+                <img src="assets/saldo.svg" alt="Valor Final">
+              </div>
+              <div class="stat-content">
+                <h3>Valor Final</h3>
+                <p class="stat-value positive">{{ formatCurrency(simulationResult.valorFinal) }}</p>
+                <span class="stat-label">Montante total</span>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-icon" style="background: #f3e5f5;">
+                <img src="assets/carteira.svg" alt="Total Investido">
+              </div>
+              <div class="stat-content">
+                <h3>Total Investido</h3>
+                <p class="stat-value neutral">{{ formatCurrency(simulationResult.totalInvestido) }}</p>
+                <span class="stat-label">Aportes realizados</span>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-icon" style="background: #e8f5e8;">
+                <img src="assets/receitas.svg" alt="Rendimento">
+              </div>
+              <div class="stat-content">
+                <h3>Rendimento Total</h3>
+                <p class="stat-value" [class]="getResultStatus('profit')">{{ formatCurrency(simulationResult.rendimentoTotal) }}</p>
+                <span class="stat-label">Ganho obtido</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Informações Detalhadas -->
+          <div class="results-details">
+            <div class="detail-row">
+              <span class="detail-label">Taxa Efetiva Anual:</span>
+              <span class="detail-value">{{ formatPercentage(simulationResult.taxaEfetivaAnual) }}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">Taxa Efetiva Mensal:</span>
+              <span class="detail-value">{{ formatPercentage(simulationResult.taxaEfetivaMensal) }}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">Rentabilidade Total:</span>
+              <span class="detail-value" [class]="getResultStatus('profit')">{{ formatPercentage(getReturnRate()) }}</span>
+            </div>
+            
+            <div class="detail-row highlight">
+              <span class="detail-label">Período do Investimento:</span>
+              <span class="detail-value">{{ totalTimeDescription }}</span>
+            </div>
+          </div>
+
+          <!-- Indicadores Visuais -->
+          <div class="result-indicators">
+            <div class="indicator">
+              <div class="indicator-bar">
+                <div class="indicator-fill invested" [style.width.%]="(simulationResult.totalInvestido / simulationResult.valorFinal) * 100"></div>
+                <div class="indicator-fill profit" [style.width.%]="(simulationResult.rendimentoTotal / simulationResult.valorFinal) * 100"></div>
+              </div>
+              <div class="indicator-legend">
+                <div class="legend-item">
+                  <span class="legend-color invested"></span>
+                  <span class="legend-text">Investido ({{ formatPercentage((simulationResult.totalInvestido / simulationResult.valorFinal) * 100) }})</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color profit"></span>
+                  <span class="legend-text">Rendimento ({{ formatPercentage((simulationResult.rendimentoTotal / simulationResult.valorFinal) * 100) }})</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        }
+
+        @if (!simulationResult) {
+        <div class="no-results">
+          <div class="no-results-icon">
+            <img src="assets/calculadora.svg" alt="Calculadora">
+          </div>
+          <h3>Pronto para simular?</h3>
+          <p>Preencha os campos ao lado e clique em "Calcular" para ver a projeção do seu investimento.</p>
+        </div>
+        }
+      </div>
+
+    </div>
+  </section>
+
+</div>

@@ -274,24 +274,31 @@
           </div>
           }
         </div>
-        <!-- Perfil de Investidor -->
-        <div class="stat-card profile-card" (click)="goToInvestorProfile()">
-          <div class="stat-content">
-            <h3>Perfil de Investidor</h3>
-            @if (investorProfile) {
-            <p class="stat-value">{{ getRiskProfileText(investorProfile.riskProfile) }}</p>
-            <span class="stat-label">Clique para refazer o questionário</span>
-            } @else {
-            <p class="stat-value">Não definido</p>
-            <span class="stat-label">Responda o questionário</span>
-            }
-          </div>
-          <img class="stat-icon" src="/assets/chart-histogram.svg" alt="">
-        </div>
       </div>
     </div>
     }
   </section>
+  }
+
+  <!-- PERFIL DE INVESTIDOR - MOVIDO PARA FORA DA SEÇÃO DE CHARTS -->
+  @if (!loading) {
+  <section class="profile-section">
+    <div class="stat-card profile-card" (click)="goToInvestorProfile()">
+      <div class="stat-content">
+        <h3>Perfil de Investidor</h3>
+        @if (investorProfile) {
+        <p class="stat-value">{{ getRiskProfileText(investorProfile.riskProfile) }}</p>
+        <span class="stat-label">Clique para refazer o questionário</span>
+        } @else {
+        <p class="stat-value">Não definido</p>
+        <span class="stat-label">Responda o questionário</span>
+        }
+      </div>
+      <img class="stat-icon" src="/assets/chart-histogram.svg" alt="">
+    </div>
+  </section>
+  }
+
   @if (!loading) {
   <section class="piggy-bank-section">
     <div class="piggy-bank-summary-card" (click)="goToPiggyBanks()">
@@ -300,7 +307,6 @@
           <h3>Cofrinhos</h3>
           <p class="piggy-bank-subtitle">{{ getPiggyBankSubtitle() }}</p>
         </div>
-        <span class="view-all-indicator">→</span>
       </div>
 
       @if (piggyBankSummary && piggyBankSummary.totalPiggyBanks > 0) {
@@ -376,7 +382,6 @@
       }
     </div>
   </section>
-  }
   }
   <app-pdf-export-modal></app-pdf-export-modal>
 </div>

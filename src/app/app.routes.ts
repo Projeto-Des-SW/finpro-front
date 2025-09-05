@@ -1,41 +1,42 @@
-// src/app/app.routes.ts - VERSÃO FINAL CORRIGIDA
 import { Routes } from "@angular/router";
 import { RegisterComponent } from "./auth/register/register.component";
 import { LoginComponent } from "./auth/login/login.component";
 import { DashboardComponent } from "./dashboard/dashboard.component";
 import { IncomeComponent } from "./income/income.component";
 import { authGuard } from "./auth/auth.guard";
-import { HomeComponent } from "./home/home.component"; 
+import { HomeComponent } from "./home/home.component";
 import { ExpenseComponent } from "./expense/expense.component";
 import { TransactionComponent } from "./transaction/transaction.component";
 import { PiggyBankComponent } from "./piggy-bank/piggy-bank.component";
 import { LayoutComponent } from "./navbar/layout/layout.component";
 import { EducationalContentComponent } from "./educational-content/educational-content.component";
+import { InvestmentCalculatorComponent } from "./investment-calculator/investment-calculator.component";
 import { InvestmentProfileComponent } from "./investment-profile/investment-profile.component";
 
+
 const routeConfig: Routes = [
-    { 
-        path: '', 
-        redirectTo: '/cadastro',  
+    {
+        path: '',
+        redirectTo: '/cadastro',
         pathMatch: 'full'
     },
-    
-    { 
+
+    {
         path: 'login',
-        component: LoginComponent, 
-        title: 'Login - FinPro' 
-    },
-    { 
-        path: 'cadastro', 
-        component: RegisterComponent, 
-        title: 'Cadastro - FinPro' 
+        component: LoginComponent,
+        title: 'Login - FinPro'
     },
     {
-        path: 'home',               
-        component: HomeComponent, 
+        path: 'cadastro',
+        component: RegisterComponent,
+        title: 'Cadastro - FinPro'
+    },
+    {
+        path: 'home',
+        component: HomeComponent,
         title: 'Home'
     },
-    
+
     {
         path: 'app',
         component: LayoutComponent,
@@ -84,6 +85,12 @@ const routeConfig: Routes = [
                 component: EducationalContentComponent,
                 title: 'Conteúdo Educacional - FinPro'
             },
+            // /app/calculadora de investimentos
+            {
+                path: 'calculadora',
+                component: InvestmentCalculatorComponent,
+                title: 'Calculadora de Investimentos - FinPro'
+            },
             // /app/perfil-investimento
             {
                 path: 'perfil-investimento',
@@ -92,7 +99,7 @@ const routeConfig: Routes = [
             }
         ]
     },
-    
+
     {
         path: '**',
         redirectTo: '/cadastro'
