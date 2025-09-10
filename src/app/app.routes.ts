@@ -12,6 +12,7 @@ import { LayoutComponent } from "./navbar/layout/layout.component";
 import { EducationalContentComponent } from "./educational-content/educational-content.component";
 import { InvestmentCalculatorComponent } from "./investment-calculator/investment-calculator.component";
 import { InvestmentProfileComponent } from "./investment-profile/investment-profile.component";
+import { InvestmentRecommendationsComponent } from "./investment-recommendations/investment-recommendations.component";
 
 
 const routeConfig: Routes = [
@@ -96,7 +97,14 @@ const routeConfig: Routes = [
                 path: 'perfil-investimento',
                 component: InvestmentProfileComponent,
                 title: 'Perfil do Investidor - FinPro'
+            },
+            // /app/recomendações-investimento
+            {
+                path: 'recomendacoes-investimento',
+                component: InvestmentRecommendationsComponent,
+                title: 'Recomendações de Investimento - FinPro'
             }
+
         ]
     },
 
