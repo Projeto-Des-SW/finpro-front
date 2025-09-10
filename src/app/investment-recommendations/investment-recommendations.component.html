@@ -1,0 +1,138 @@
+<div class="recommendations-container">
+  <header class="recommendations-header">
+    <div class="header-content">
+      <h1>Recomendações de Investimentos</h1>
+      <p class="header-subtitle">Investimentos personalizados para o seu perfil</p>
+    </div>
+    <div class="header-actions">
+    </div>
+  </header>
+
+  @if (loading) {
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Carregando suas recomendações personalizadas...</p>
+    </div>
+  }
+
+  @if (!loading && !error && recommendations) {
+    <div class="recommendations-content">
+
+      <!-- Alerta Personalizado do Perfil -->
+      <div class="profile-alert" [style.border-left-color]="getRiskProfileColor()">
+        <div class="alert-content">
+          <h3>Seu Perfil: {{ getRiskProfileText() }}</h3>
+          <p>{{ getRiskProfileDescription() }}</p>
+        </div>
+      </div>
+
+      <!-- Lista de Recomendações -->
+      <div class="recommendations-section">
+        <div class="section-header">
+          <h2>Investimentos Recomendados</h2>
+          <p>Baseado no seu perfil {{ getRiskProfileText().toLowerCase() }}, estas são as melhores opções para você:</p>
+        </div>
+
+        <div class="recommendations-grid">
+          @for (recommendation of recommendations.recommendations; track recommendation; let i = $index) {
+            <div class="recommendation-card" [style.border-left-color]="getRiskProfileColor()">
+              <div class="card-header">
+                <div class="recommendation-number">{{ i + 1 }}</div>
+                <h3 class="recommendation-title">{{ recommendation }}</h3>
+              </div>
+
+              <div class="card-content">
+                <p class="recommendation-description">
+                  @switch (recommendation) {
+                    @case ('Tesouro Selic') {
+                      Título público seguro com liquidez diária. Ideal para reserva de emergência.
+                    }
+                    @case ('CDB - liquidez diária') {
+                      Certificado bancário com resgate imediato e proteção do FGC.
+                    }
+                    @case ('LCI/LCA') {
+                      Investimentos isentos de IR focados em crédito imobiliário e agronegócio.
+                    }
+                    @case ('Fundos DI') {
+                      Fundos conservadores que acompanham a taxa CDI com gestão profissional.
+                    }
+                    @case ('Poupança (último recurso)') {
+                      Tradicional poupança com baixa rentabilidade, mas alta segurança.
+                    }
+                    @case ('Tesouro IPCA+') {
+                      Títulos que protegem da inflação oferecendo rentabilidade real.
+                    }
+                    @case ('CDBs de bancos médios') {
+                      CDBs com maior rentabilidade oferecidos por bancos de médio porte.
+                    }
+                    @case ('Fundos Multimercado') {
+                      Fundos com estratégias diversificadas para buscar rentabilidade superior.
+                    }
+                    @case ('Fundos Imobiliários') {
+                      Investimento em imóveis com distribuição mensal de dividendos.
+                    }
+                    @case ('ETFs') {
+                      Fundos de índice com baixo custo e ampla diversificação.
+                    }
+                    @case ('Ações individuais (ex: PETR4, VALE3)') {
+                      Investimento direto em empresas com alto potencial de crescimento.
+                    }
+                    @case ('ETFs internacionais (ex: NASD11, HASH11)') {
+                      Exposição a mercados internacionais através de fundos de índice.
+                    }
+                    @case ('Criptomoedas') {
+                      Ativos digitais com alta volatilidade e potencial de grandes ganhos.
+                    }
+                    @case ('Debêntures, CRIs, CRAs') {
+                      Títulos de dívida privada com rentabilidade atrativa.
+                    }
+                    @case ('Investimentos alternativos (startups)') {
+                      Investimentos em empresas nascentes com alto potencial disruptivo.
+                    }
+                    @default {
+                      Investimento recomendado para o seu perfil de risco.
+                    }
+                  }
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="disclaimer">
+        <div class="disclaimer-icon">
+          <img src="assets/info.svg" alt="Aviso" class="icon">
+        </div>
+        <div class="disclaimer-content">
+          <h4>Importante</h4>
+          <p>
+            Estas recomendações são baseadas no seu perfil de investidor e têm caráter educacional. <br>
+            Sempre consulte um especialista antes de tomar decisões de investimento. <br>
+            A rentabilidade passada não garante resultados futuros.
+          </p>
+        </div>
+      </div>
+
+      <!-- Call to Actions -->
+      <div class="cta-section">
+        <div class="cta-buttons">
+          <button class="btn-primary" (click)="goToCalculator()">
+            <img src="assets/calculadora.svg" alt="Calculadora" class="btn-icon">
+            Simule seus Investimentos
+          </button>
+          <button class="btn-primary" (click)="goToEducationalContent()">
+            <img src="assets/book-open.svg" alt="Educação" class="btn-icon">
+            Aprenda Mais
+          </button>
+          <button class="btn-primary" (click)="goToProfile()">
+            <img src="assets/chart-histogram.svg" alt="Perfil" class="btn-icon">
+            Atualizar Perfil
+          </button>
+        </div>
+      </div>
+
+    </div> 
+  }
+</div> 
