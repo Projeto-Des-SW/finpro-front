@@ -683,3 +683,286 @@ body {
     flex-direction: column;
   }
 }
+
+/* =================== ESTILOS PARA STATUS OVERDUE =================== */
+
+/* Cards vencidos */
+.piggy-bank-card.overdue {
+  border-color: #ffc107;
+  background: linear-gradient(135deg, #fff9e6, #ffffff);
+  position: relative;
+}
+
+.piggy-bank-card.overdue::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ffc107, #fd7e14);
+  border-radius: 12px 12px 0 0;
+}
+
+/* Badge de status vencido */
+.status-badge.overdue {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.overdue-days {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* Barra de progresso vencida */
+.progress-bar.overdue {
+  background: linear-gradient(90deg, #ffc107, #fd7e14);
+  animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-warning {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* Avisos de vencimento */
+.overdue-warning {
+  background: #fff3cd;
+  color: #856404;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 12px;
+  border-left: 3px solid #ffc107;
+}
+
+.overdue-indicator {
+  color: #dc3545;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.overdue-text {
+  color: #dc3545;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.overdue-info {
+  color: #856404;
+  background: #fff3cd;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border-left: 3px solid #ffc107;
+}
+
+/* =================== ALERTAS =================== */
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border-left: 4px solid;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  border-left-color: #ffc107;
+  color: #856404;
+}
+
+.alert-info {
+  background-color: #d1ecf1;
+  border-left-color: #17a2b8;
+  color: #0c5460;
+}
+
+.overdue-alert,
+.overdue-alert-modal {
+  margin-bottom: 20px;
+}
+
+/* =================== BOTÕES ADICIONAIS =================== */
+
+.btn-extend {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-extend:hover {
+  background: #e0a800;
+}
+
+.btn-modal.warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-modal.warning:hover {
+  background: #e0a800;
+}
+
+/* =================== FORMULÁRIOS DE EXTENSÃO =================== */
+
+.extend-info {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border-left: 4px solid #ffc107;
+}
+
+.extend-info p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.extend-form {
+  margin-top: 16px;
+}
+
+.extend-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-bottom: 8px;
+  transition: border-color 0.3s ease;
+}
+
+.extend-input:focus {
+  outline: none;
+  border-color: #ffc107;
+}
+
+.form-hint {
+  color: #6c757d;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* =================== RESPONSIVIDADE PARA NOVOS ELEMENTOS =================== */
+
+@media (max-width: 768px) {
+  .overdue-warning {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .status-badge.overdue {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .overdue-days {
+    font-size: 9px;
+  }
+
+  .alert {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .extend-info {
+    padding: 12px;
+  }
+
+  .extend-info p {
+    font-size: 13px;
+  }
+
+  /* Ajustar ações do card para incluir botão estender */
+  .card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .card-actions .btn-extend {
+    order: 2;
+  }
+
+  .card-actions .btn-edit {
+    order: 3;
+  }
+
+  .card-actions .btn-delete {
+    order: 4;
+  }
+}
+
+/* =================== MELHORIAS VISUAIS =================== */
+
+/* Hover especial para cards vencidos */
+.piggy-bank-card.overdue:hover {
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Animação sutil para elementos vencidos */
+.overdue-warning,
+.overdue-alert .alert,
+.overdue-alert-modal .alert {
+  animation: slideInDown 0.3s ease;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estados de botões para cofrinhos vencidos */
+.btn-card-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-deposit:disabled {
+  background: #6c757d;
+}
+
+.btn-deposit:disabled:hover {
+  background: #6c757d;
+}
+
+/* Indicadores visuais mais claros */
+.target-date .overdue-indicator {
+  display: inline-block;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.5; }
+}
+
+/* Melhor contraste para texto em elementos vencidos */
+.piggy-bank-card.overdue .piggy-bank-name {
+  color: #856404;
+}
+
+.piggy-bank-card.overdue .amount-value {
+  font-weight: 700;
+}
+
+/* Estilo especial para a data vencida */
+.target-date {
+  position: relative;
+}
+
+.piggy-bank-card.overdue .target-date {
+  background: rgba(255, 193, 7, 0.1);
+  padding: 8px;
+  border-radius: 6px;
+  border-left: 3px solid #ffc107;
+}

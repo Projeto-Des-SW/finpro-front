@@ -16,6 +16,16 @@
   <!-- Formulário de Novo/Editar Cofrinho -->
   <div class="form-container" [class.show]="showForm">
     <h2>{{ isEditing ? 'Editar Cofrinho' : 'Novo Cofrinho' }}</h2>
+    
+    <!-- Alerta para cofrinhos vencidos -->
+    <div class="overdue-alert" *ngIf="isEditing && editingPiggyBankId && selectedPiggyBank && isOverdue(selectedPiggyBank)">
+      <div class="alert alert-warning">
+        <strong>⚠️ Cofrinho Vencido!</strong>
+        Este cofrinho está {{ getDaysOverdue(selectedPiggyBank) }} dias em atraso. 
+        Você pode estender o prazo ou continuar com depósitos.
+      </div>
+    </div>
+
     <form [formGroup]="piggyBankForm" (ngSubmit)="onSubmit()">
       <div class="form-row">
         <div class="form-group">
@@ -101,6 +111,7 @@
           <option value="">Todos</option>
           <option value="ON_TRACK">No prazo</option>
           <option value="BEHIND">Atrasado</option>
+          <option value="OVERDUE">Vencido</option>
           <option value="COMPLETED">Concluído</option>
         </select>
       </div>
@@ -127,21 +138,38 @@
 
     <div class="piggy-banks-grid" *ngIf="filteredPiggyBanks.length > 0">
       <div *ngFor="let piggyBank of filteredPiggyBanks" class="piggy-bank-card"
-        [class.completed]="piggyBank.status === 'COMPLETED'" [class.behind]="piggyBank.status === 'BEHIND'"
-        [class.on-track]="piggyBank.status === 'ON_TRACK'" (click)="openPiggyBankModal(piggyBank)">
+        [class.completed]="getCalculatedStatus(piggyBank) === 'COMPLETED'" 
+        [class.behind]="getCalculatedStatus(piggyBank) === 'BEHIND'"
+        [class.on-track]="getCalculatedStatus(piggyBank) === 'ON_TRACK'" 
+        [class.overdue]="getCalculatedStatus(piggyBank) === 'OVERDUE'"
+        (click)="openPiggyBankModal(piggyBank)">
 
         <div class="card-header">
           <h4 class="piggy-bank-name">{{ piggyBank.name }}</h4>
-          <span class="status-badge" [class.completed]="piggyBank.status === 'COMPLETED'"
-            [class.behind]="piggyBank.status === 'BEHIND'" [class.on-track]="piggyBank.status === 'ON_TRACK'">
-            {{ getStatusLabel(piggyBank.status) }}
+          <span class="status-badge" 
+            [class.completed]="getCalculatedStatus(piggyBank) === 'COMPLETED'"
+            [class.behind]="getCalculatedStatus(piggyBank) === 'BEHIND'" 
+            [class.on-track]="getCalculatedStatus(piggyBank) === 'ON_TRACK'"
+            [class.overdue]="getCalculatedStatus(piggyBank) === 'OVERDUE'">
+            {{ getStatusLabel(getCalculatedStatus(piggyBank)) }}
+            <span *ngIf="isOverdue(piggyBank)" class="overdue-days">
+              ({{ getDaysOverdue(piggyBank) }}d)
+            </span>
           </span>
+        </div>
+
+        <!-- Alerta de vencimento -->
+        <div class="overdue-warning" *ngIf="isOverdue(piggyBank)">
+          <small>⚠️ Vencido há {{ getDaysOverdue(piggyBank) }} dias</small>
         </div>
 
         <div class="progress-section">
           <div class="progress-bar-container">
-            <div class="progress-bar" [class.completed]="piggyBank.status === 'COMPLETED'"
-              [class.behind]="piggyBank.status === 'BEHIND'" [class.on-track]="piggyBank.status === 'ON_TRACK'"
+            <div class="progress-bar" 
+              [class.completed]="getCalculatedStatus(piggyBank) === 'COMPLETED'"
+              [class.behind]="getCalculatedStatus(piggyBank) === 'BEHIND'" 
+              [class.on-track]="getCalculatedStatus(piggyBank) === 'ON_TRACK'"
+              [class.overdue]="getCalculatedStatus(piggyBank) === 'OVERDUE'"
               [style.width.%]="getProgressPercentage(piggyBank)">
             </div>
           </div>
@@ -168,17 +196,29 @@
 
         <div class="target-date">
           <strong>Data meta:</strong> {{ formatDate(piggyBank.targetDate) }}
+          <span *ngIf="isOverdue(piggyBank)" class="overdue-indicator"> (Vencido)</span>
         </div>
 
         <div class="card-actions" (click)="$event.stopPropagation()">
-          <button class="btn-card-action btn-deposit" (click)="openDepositModal(piggyBank)"
-            [disabled]="piggyBank.status === 'COMPLETED'">
+          <button class="btn-card-action btn-deposit" 
+            (click)="openDepositModal(piggyBank)"
+            [disabled]="!canDeposit(piggyBank)">
             Depositar
           </button>
-          <button class="btn-card-action btn-edit" (click)="editPiggyBank(piggyBank)">
+          
+          <button class="btn-card-action btn-extend" 
+            *ngIf="canExtendDeadline(piggyBank)"
+            (click)="openExtendModal(piggyBank)">
+            Estender
+          </button>
+          
+          <button class="btn-card-action btn-edit" 
+            (click)="editPiggyBank(piggyBank)">
             Editar
           </button>
-          <button class="btn-card-action btn-delete" (click)="deletePiggyBank(piggyBank.piggyBankId)">
+          
+          <button class="btn-card-action btn-delete" 
+            (click)="deletePiggyBank(piggyBank.piggyBankId)">
             Excluir
           </button>
         </div>
@@ -197,9 +237,22 @@
       </div>
 
       <div class="modal-body" *ngIf="selectedPiggyBank">
+        <!-- Alerta de vencimento no modal -->
+        <div class="overdue-alert-modal" *ngIf="isOverdue(selectedPiggyBank)">
+          <div class="alert alert-warning">
+            <strong>⚠️ Cofrinho Vencido!</strong>
+            Este cofrinho está vencido há {{ getDaysOverdue(selectedPiggyBank) }} dias.
+          </div>
+        </div>
+
         <div class="detail-item">
           <span class="detail-label">Status</span>
-          <span class="detail-value">{{ getStatusLabel(selectedPiggyBank.status) }}</span>
+          <span class="detail-value">
+            {{ getStatusLabel(getCalculatedStatus(selectedPiggyBank)) }}
+            <span *ngIf="isOverdue(selectedPiggyBank)" class="overdue-text">
+              ({{ getDaysOverdue(selectedPiggyBank) }} dias de atraso)
+            </span>
+          </span>
         </div>
 
         <div class="detail-item">
@@ -229,7 +282,10 @@
 
         <div class="detail-item">
           <span class="detail-label">Data meta</span>
-          <span class="detail-value">{{ formatDate(selectedPiggyBank.targetDate) }}</span>
+          <span class="detail-value">
+            {{ formatDate(selectedPiggyBank.targetDate) }}
+            <span *ngIf="isOverdue(selectedPiggyBank)" class="overdue-indicator"> (Vencido)</span>
+          </span>
         </div>
 
         <div class="detail-item" *ngIf="selectedPiggyBank.depositDay">
@@ -244,13 +300,22 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn-modal success" (click)="openDepositModal(selectedPiggyBank!)"
-          [disabled]="selectedPiggyBank?.status === 'COMPLETED'">
+        <button class="btn-modal success" 
+          (click)="openDepositModal(selectedPiggyBank!)"
+          [disabled]="!canDeposit(selectedPiggyBank!)">
           Fazer Depósito
         </button>
+        
+        <button class="btn-modal warning" 
+          *ngIf="canExtendDeadline(selectedPiggyBank!)"
+          (click)="openExtendModal(selectedPiggyBank!)">
+          Estender Prazo
+        </button>
+        
         <button class="btn-modal primary" (click)="editPiggyBankFromModal()">
           Editar
         </button>
+        
         <button class="btn-modal danger" (click)="deletePiggyBankFromModal()">
           Excluir
         </button>
@@ -269,14 +334,25 @@
       </div>
 
       <div class="modal-body" *ngIf="selectedPiggyBankForDeposit">
+        <!-- Alerta para cofrinho vencido -->
+        <div class="overdue-alert-modal" *ngIf="isOverdue(selectedPiggyBankForDeposit)">
+          <div class="alert alert-info">
+            <strong>💡 Dica:</strong>
+            Este cofrinho está vencido, mas você ainda pode fazer depósitos para atingir sua meta!
+          </div>
+        </div>
+
         <p><strong>Cofrinho:</strong> {{ selectedPiggyBankForDeposit.name }}</p>
         <p><strong>Valor atual:</strong> R$ {{ formatCurrency(selectedPiggyBankForDeposit.currentAmount) }}</p>
         <p><strong>Meta:</strong> R$ {{ formatCurrency(selectedPiggyBankForDeposit.savingsGoal) }}</p>
+        <p *ngIf="isOverdue(selectedPiggyBankForDeposit)" class="overdue-info">
+          <strong>Status:</strong> Vencido há {{ getDaysOverdue(selectedPiggyBankForDeposit) }} dias
+        </p>
 
         <div class="deposit-form">
           <label for="depositAmount">Valor do depósito:</label>
-          <input type="number" id="depositAmount" class="deposit-input" [(ngModel)]="depositAmount" placeholder="0,00"
-            step="0.01" min="0.01">
+          <input type="number" id="depositAmount" class="deposit-input" 
+            [(ngModel)]="depositAmount" placeholder="0,00" step="0.01" min="0.01">
           <div class="error" *ngIf="depositError">
             {{ depositError }}
           </div>
@@ -289,6 +365,43 @@
           {{ loading ? 'Processando...' : 'Confirmar Depósito' }}
         </button>
         <button class="btn-modal" (click)="closeDepositModal()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Extensão de Prazo -->
+  <div class="modal-overlay" *ngIf="showExtendModal" (click)="closeExtendModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Estender Prazo</h2>
+        <button class="modal-close" (click)="closeExtendModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedPiggyBank">
+        <div class="extend-info">
+          <p><strong>Cofrinho:</strong> {{ selectedPiggyBank.name }}</p>
+          <p><strong>Data atual:</strong> {{ formatDate(selectedPiggyBank.targetDate) }}</p>
+          <p><strong>Dias de atraso:</strong> {{ getDaysOverdue(selectedPiggyBank) }} dias</p>
+          <p><strong>Progresso atual:</strong> {{ getProgressPercentage(selectedPiggyBank) }}%</p>
+        </div>
+
+        <div class="extend-form">
+          <label for="extendDate">Nova data meta:</label>
+          <input type="date" id="extendDate" class="extend-input" [(ngModel)]="extendDate" required>
+          <small class="form-hint">A nova data deve ser posterior à data atual ({{ formatDate(selectedPiggyBank.targetDate) }})</small>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-modal warning" (click)="extendDeadline()"
+          [disabled]="!extendDate || loading">
+          {{ loading ? 'Processando...' : 'Estender Prazo' }}
+        </button>
+        <button class="btn-modal" (click)="closeExtendModal()">
           Cancelar
         </button>
       </div>

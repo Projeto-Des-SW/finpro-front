@@ -16,12 +16,14 @@ export interface PiggyBankResponse {
   savingsGoal: number;
   currentAmount: number;
   targetDate: string;
-  status: 'ON_TRACK' | 'BEHIND' | 'COMPLETED';
+  status: 'ON_TRACK' | 'BEHIND' | 'COMPLETED' | 'OVERDUE'; 
   depositDay?: number;
   progressPercentage?: number;
   lastDepositDate?: string;
   recommendedMonthlyDeposit?: number;
 }
+
+export type PiggyBankStatusCalculated = 'ON_TRACK' | 'BEHIND' | 'COMPLETED' | 'OVERDUE';
 
 export interface PiggyBankDeposit {
   amount: number;

@@ -1,10 +1,11 @@
+// src/app/piggy-bank/piggy-bank.component.ts
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { PiggyBankService } from './piggy-bank.service';
-import { PiggyBank, PiggyBankResponse } from '../entity/piggy-bank';
+import { PiggyBank, PiggyBankResponse, PiggyBankStatusCalculated } from '../entity/piggy-bank';
 
 interface FilterOptions {
   status: string;
@@ -44,7 +45,7 @@ export class PiggyBankComponent implements OnInit {
   depositAmount: number = 0;
   depositError = '';
 
-  // Filtros
+  // Filtros - Adicionando OVERDUE
   filters: FilterOptions = {
     status: '',
     searchTerm: ''
@@ -75,6 +76,13 @@ export class PiggyBankComponent implements OnInit {
   async loadPiggyBanks() {
     try {
       this.piggyBanks = await this.piggyBankService.getAllPiggyBanks();
+      
+      // Processar status calculado para cada cofrinho
+      this.piggyBanks = this.piggyBanks.map(piggyBank => ({
+        ...piggyBank,
+        calculatedStatus: this.calculateCurrentStatus(piggyBank)
+      }));
+      
       this.applyFilters();
     } catch (error: any) {
       console.error('Erro ao carregar cofrinhos:', error);
@@ -82,12 +90,124 @@ export class PiggyBankComponent implements OnInit {
     }
   }
 
-  toggleForm() {
-    this.showForm = !this.showForm;
-    if (!this.showForm) {
-      this.resetForm();
+  // =================== CÁLCULO DE STATUS ===================
+
+  calculateCurrentStatus(piggyBank: PiggyBankResponse): PiggyBankStatusCalculated {
+    const today = new Date();
+    const targetDate = new Date(piggyBank.targetDate);
+
+    // Se já atingiu a meta
+    if (piggyBank.currentAmount >= piggyBank.savingsGoal) {
+      return 'COMPLETED';
+    }
+
+    // Se a data já passou e não atingiu a meta
+    if (targetDate < today) {
+      return 'OVERDUE';
+    }
+
+    // Calcular se está no prazo baseado no progresso esperado
+    const totalDaysFromStart = this.calculateDaysFromStart(piggyBank);
+    const daysPassed = this.calculateDaysPassed(piggyBank);
+    
+    if (totalDaysFromStart > 0) {
+      const expectedProgress = daysPassed / totalDaysFromStart;
+      const actualProgress = piggyBank.currentAmount / piggyBank.savingsGoal;
+      
+      // Se o progresso real está 20% abaixo do esperado
+      if (actualProgress < (expectedProgress * 0.8)) {
+        return 'BEHIND';
+      }
+    }
+
+    return 'ON_TRACK';
+  }
+
+  private calculateDaysFromStart(piggyBank: PiggyBankResponse): number {
+    // Assumindo que o cofrinho foi criado há 30 dias se não tiver data de criação
+    // Você pode ajustar isso se tiver a data de criação no backend
+    const createdDate = piggyBank.lastDepositDate ? 
+      new Date(piggyBank.lastDepositDate) : 
+      new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
+    
+    const targetDate = new Date(piggyBank.targetDate);
+    const diffTime = Math.abs(targetDate.getTime() - createdDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  private calculateDaysPassed(piggyBank: PiggyBankResponse): number {
+    const createdDate = piggyBank.lastDepositDate ? 
+      new Date(piggyBank.lastDepositDate) : 
+      new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
+    
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - createdDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  // =================== HELPERS ATUALIZADOS ===================
+
+  getCalculatedStatus(piggyBank: PiggyBankResponse): PiggyBankStatusCalculated {
+    return this.calculateCurrentStatus(piggyBank);
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'ON_TRACK': return 'No prazo';
+      case 'BEHIND': return 'Atrasado';
+      case 'COMPLETED': return 'Concluído';
+      case 'OVERDUE': return 'Vencido';
+      default: return status;
     }
   }
+
+  isOverdue(piggyBank: PiggyBankResponse): boolean {
+    return this.getCalculatedStatus(piggyBank) === 'OVERDUE';
+  }
+
+  canDeposit(piggyBank: PiggyBankResponse): boolean {
+    const status = this.getCalculatedStatus(piggyBank);
+    return status !== 'COMPLETED';
+  }
+
+  canExtendDeadline(piggyBank: PiggyBankResponse): boolean {
+    return this.isOverdue(piggyBank);
+  }
+
+  getDaysOverdue(piggyBank: PiggyBankResponse): number {
+    if (!this.isOverdue(piggyBank)) return 0;
+    
+    const today = new Date();
+    const targetDate = new Date(piggyBank.targetDate);
+    const diffTime = today.getTime() - targetDate.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  // =================== FILTROS ATUALIZADOS ===================
+
+  applyFilters() {
+    let filtered = [...this.piggyBanks];
+
+    // Filtro por status (incluindo OVERDUE)
+    if (this.filters.status) {
+      filtered = filtered.filter(piggyBank => {
+        const calculatedStatus = this.getCalculatedStatus(piggyBank);
+        return calculatedStatus === this.filters.status;
+      });
+    }
+
+    // Filtro por busca
+    if (this.filters.searchTerm) {
+      const searchTerm = this.filters.searchTerm.toLowerCase();
+      filtered = filtered.filter(piggyBank =>
+        piggyBank.name.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    this.filteredPiggyBanks = filtered;
+  }
+
+  // =================== VALIDAÇÃO DE FORMULÁRIO ATUALIZADA ===================
 
   async onSubmit() {
     if (this.piggyBankForm.valid) {
@@ -96,6 +216,32 @@ export class PiggyBankComponent implements OnInit {
 
       try {
         const formData = this.piggyBankForm.value;
+        const targetDate = new Date(formData.targetDate);
+        const today = new Date();
+
+        // Validação especial para edição de cofrinhos vencidos
+        if (this.isEditing && this.editingPiggyBankId) {
+          const existingPiggyBank = this.piggyBanks.find(pb => 
+            pb.piggyBankId === this.editingPiggyBankId
+          );
+          
+          if (existingPiggyBank && this.isOverdue(existingPiggyBank)) {
+            // Se está vencido, permitir apenas estender o prazo
+            const currentTargetDate = new Date(existingPiggyBank.targetDate);
+            if (targetDate <= currentTargetDate) {
+              this.errorMessage = 'Para cofrinhos vencidos, você só pode estender o prazo.';
+              this.loading = false;
+              return;
+            }
+          }
+        } else {
+          // Para novos cofrinhos, não permitir data no passado
+          if (targetDate < today) {
+            this.errorMessage = 'A data meta não pode ser no passado.';
+            this.loading = false;
+            return;
+          }
+        }
         
         const piggyBankData: PiggyBank = {
           name: formData.name.trim(),
@@ -108,19 +254,14 @@ export class PiggyBankComponent implements OnInit {
         };
 
         if (this.isEditing && this.editingPiggyBankId) {
-          // Atualizar cofrinho existente
           await this.piggyBankService.updatePiggyBank(this.editingPiggyBankId, piggyBankData);
           console.log('Cofrinho atualizado com sucesso');
         } else {
-          // Criar novo cofrinho
           await this.piggyBankService.createPiggyBank(piggyBankData);
           console.log('Cofrinho criado com sucesso');
         }
 
-        // Recarregar dados
         await this.loadPiggyBanks();
-
-        // Reset do formulário
         this.resetForm();
         this.showForm = false;
 
@@ -135,33 +276,97 @@ export class PiggyBankComponent implements OnInit {
     }
   }
 
+  // =================== MODAL DE EXTENSÃO DE PRAZO ===================
+
+  showExtendModal = false;
+  extendDate = '';
+
+  openExtendModal(piggyBank: PiggyBankResponse) {
+    this.selectedPiggyBank = piggyBank;
+    this.extendDate = '';
+    this.showExtendModal = true;
+  }
+
+  closeExtendModal() {
+    this.showExtendModal = false;
+    this.selectedPiggyBank = null;
+    this.extendDate = '';
+  }
+
+  async extendDeadline() {
+    if (!this.selectedPiggyBank || !this.extendDate) {
+      return;
+    }
+
+    const newDate = new Date(this.extendDate);
+    const currentDate = new Date(this.selectedPiggyBank.targetDate);
+
+    if (newDate <= currentDate) {
+      alert('A nova data deve ser posterior à data atual.');
+      return;
+    }
+
+    try {
+      this.loading = true;
+
+      const updateData: PiggyBank = {
+        name: this.selectedPiggyBank.name,
+        savingsGoal: this.selectedPiggyBank.savingsGoal,
+        monthlyDeposit: this.selectedPiggyBank.monthlyDeposit,
+        targetDate: this.extendDate,
+        currentAmount: this.selectedPiggyBank.currentAmount,
+        status: 'ON_TRACK',
+        depositDay: this.selectedPiggyBank.depositDay
+      };
+
+      await this.piggyBankService.updatePiggyBank(
+        this.selectedPiggyBank.piggyBankId, 
+        updateData
+      );
+
+      await this.loadPiggyBanks();
+      this.closeExtendModal();
+      alert('Prazo estendido com sucesso!');
+
+    } catch (error: any) {
+      console.error('Erro ao estender prazo:', error);
+      alert(error.message || 'Erro ao estender prazo');
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  // Métodos existentes permanecem os mesmos...
+  toggleForm() {
+    this.showForm = !this.showForm;
+    if (!this.showForm) {
+      this.resetForm();
+    }
+  }
+
   resetForm() {
     this.piggyBankForm.reset({
       currentAmount: 0
     });
     this.errorMessage = '';
     
-    // Reset do estado de edição
     this.isEditing = false;
     this.editingPiggyBankId = null;
   }
 
   editPiggyBank(piggyBank: PiggyBankResponse) {
-    // Configurar modo de edição
     this.isEditing = true;
     this.editingPiggyBankId = piggyBank.piggyBankId;
 
-    // Preencher formulário
     this.piggyBankForm.patchValue({
       name: piggyBank.name,
       savingsGoal: piggyBank.savingsGoal,
       monthlyDeposit: piggyBank.monthlyDeposit,
-      targetDate: piggyBank.targetDate.split('T')[0], // Remove time se existir
+      targetDate: piggyBank.targetDate.split('T')[0],
       currentAmount: piggyBank.currentAmount,
       depositDay: piggyBank.depositDay || ''
     });
 
-    // Mostrar formulário
     this.showForm = true;
     this.errorMessage = '';
 
@@ -184,31 +389,6 @@ export class PiggyBankComponent implements OnInit {
       }
     }
   }
-
-  // =================== FILTROS ===================
-
-  applyFilters() {
-    let filtered = [...this.piggyBanks];
-
-    // Filtro por status
-    if (this.filters.status) {
-      filtered = filtered.filter(piggyBank => 
-        piggyBank.status === this.filters.status
-      );
-    }
-
-    // Filtro por busca
-    if (this.filters.searchTerm) {
-      const searchTerm = this.filters.searchTerm.toLowerCase();
-      filtered = filtered.filter(piggyBank =>
-        piggyBank.name.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    this.filteredPiggyBanks = filtered;
-  }
-
-  // =================== MODAIS ===================
 
   openPiggyBankModal(piggyBank: PiggyBankResponse) {
     this.selectedPiggyBank = piggyBank;
@@ -241,8 +421,6 @@ export class PiggyBankComponent implements OnInit {
     }
   }
 
-  // =================== MODAL DE DEPÓSITO ===================
-
   openDepositModal(piggyBank: PiggyBankResponse) {
     this.selectedPiggyBankForDeposit = piggyBank;
     this.depositAmount = 0;
@@ -274,13 +452,8 @@ export class PiggyBankComponent implements OnInit {
 
       console.log('Depósito realizado:', result);
       
-      // Mostrar mensagem de sucesso
       alert(result.message || 'Depósito realizado com sucesso!');
-
-      // Recarregar dados
       await this.loadPiggyBanks();
-
-      // Fechar modal
       this.closeDepositModal();
 
     } catch (error: any) {
@@ -288,17 +461,6 @@ export class PiggyBankComponent implements OnInit {
       this.depositError = error.message || 'Erro ao fazer depósito';
     } finally {
       this.loading = false;
-    }
-  }
-
-  // =================== HELPERS ===================
-
-  getStatusLabel(status: string): string {
-    switch (status) {
-      case 'ON_TRACK': return 'No prazo';
-      case 'BEHIND': return 'Atrasado';
-      case 'COMPLETED': return 'Concluído';
-      default: return status;
     }
   }
 
