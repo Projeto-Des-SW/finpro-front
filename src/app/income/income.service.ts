@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Income } from '../entity/income';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../environments/environment.prod';
 
 interface ApiError {
   error?: string;
