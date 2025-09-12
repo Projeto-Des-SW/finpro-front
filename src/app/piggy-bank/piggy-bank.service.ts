@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { PiggyBank, PiggyBankResponse, PiggyBankDeposit, PiggyBankDepositResponse, PiggyBankProgress, PiggyBankSummary } from '../entity/piggy-bank';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../environments/environment.prod';
 
 interface ApiError {
   error?: string;

@@ -4,7 +4,7 @@ import { Observable, firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { User } from '../entity/user';
 import { jwtDecode } from 'jwt-decode';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../environments/environment.prod';
 
 interface LoginRequest {
   email: string;
