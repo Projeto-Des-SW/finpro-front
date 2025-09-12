@@ -16,13 +16,38 @@ export class SidebarComponent {
   private router = inject(Router);
 
   isCollapsed = false;
+  showLogoutModal = false;
 
   toggleSidebar() {
     this.isCollapsed = !this.isCollapsed;
   }
 
+  openLogoutModal() {
+    this.showLogoutModal = true;
+  }
+
+  closeLogoutModal() {
+    this.showLogoutModal = false;
+  }
+
+  confirmLogout() {
+    this.authService.logout();
+    this.showLogoutModal = false;
+  }
+
   logout() {
     this.authService.logout();
-    this.router.navigate(['/login']);
+  }
+
+  getUserName(): string {
+    const name = this.authService.getUserName();
+    if (name) {
+      return name.split(' ')[0];
+    }
+    return 'Usuário';
+  }
+
+  getUserEmail(): string {
+    return this.authService.getUserEmail();
   }
 }

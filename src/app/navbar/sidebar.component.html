@@ -54,11 +54,15 @@
             [title]="isCollapsed ? 'Cofrinhos' : ''">
             <img src="/assets/piggy.svg" alt="Cofrinhos" class="menu-icon">
             <span class="menu-label" [class.hidden]="isCollapsed">Cofrinhos</span>
-
           </a>
         </li>
-        <br>
-        <h3 class="section-title" [class.hidden]="isCollapsed">Investimentos</h3>
+      </ul>
+    </div>
+
+    <div class="menu-section">
+      <h3 class="section-title" [class.hidden]="isCollapsed">Investimentos</h3>
+      
+      <ul class="menu-list">
         <li class="menu-item">
           <a [routerLink]="['/app/conteudo-educacional']" routerLinkActive="active" class="menu-link"
             [title]="isCollapsed ? 'Conteúdo Educacional' : ''">
@@ -66,10 +70,11 @@
             <span class="menu-label" [class.hidden]="isCollapsed">Educacional</span>
           </a>
         </li>
+        
         <li class="menu-item">
           <a [routerLink]="['/app/calculadora']" routerLinkActive="active" class="menu-link"
             [title]="isCollapsed ? 'Calculadora' : ''">
-            <img src="/assets/calculadora.svg" alt="Conteudo Educacional" class="menu-icon">
+            <img src="/assets/calculadora.svg" alt="Calculadora" class="menu-icon">
             <span class="menu-label" [class.hidden]="isCollapsed">Calculadora</span>
           </a>
         </li>
@@ -84,7 +89,7 @@
 
         <li class="menu-item">
           <a [routerLink]="['/app/recomendacoes-investimento']" routerLinkActive="active" class="menu-link"
-            [title]="isCollapsed ? 'Perfil Investimento' : ''">
+            [title]="isCollapsed ? 'Recomendações' : ''">
             <img src="/assets/bar-chart.svg" alt="Recomendações de investimento" class="menu-icon">
             <span class="menu-label" [class.hidden]="isCollapsed">Recomendações</span>
           </a>
@@ -92,4 +97,50 @@
       </ul>
     </div>
   </nav>
+
+  <!-- Seção do usuário e logout -->
+  <div class="sidebar-footer">
+    <!-- Informações do usuário -->
+    <div class="user-info" [class.collapsed]="isCollapsed">
+      <div class="user-avatar" [class.hidden]="isCollapsed">
+        <img src="/assets/user-avatar.svg" alt="Avatar" class="avatar-icon">
+      </div>
+      <div class="user-details" [class.hidden]="isCollapsed">
+        <div class="user-name">{{ getUserName() }}</div>
+        <div class="user-email">{{ getUserEmail() }}</div>
+      </div>
+    </div>
+
+    <!-- Botão de logout -->
+    <button class="logout-btn" (click)="openLogoutModal()" [title]="isCollapsed ? 'Sair' : ''">
+      <img src="/assets/logout.svg" alt="Sair" class="logout-icon">
+      <span class="logout-label" [class.hidden]="isCollapsed">Sair</span>
+    </button>
+  </div>
+
+  <!-- Modal de confirmação de logout -->
+  <div class="logout-modal-overlay" *ngIf="showLogoutModal" (click)="closeLogoutModal()">
+    <div class="logout-modal-content" (click)="$event.stopPropagation()">
+      <div class="logout-modal-header">
+        <h3>Confirmar Logout</h3>
+        <button class="modal-close-btn" (click)="closeLogoutModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="logout-modal-body">
+        <p>Tem certeza que deseja sair?</p>
+        <p><small>Você precisará fazer login novamente para acessar o sistema.</small></p>
+      </div>
+      
+      <div class="logout-modal-actions">
+        <button class="confirm-logout-btn" (click)="confirmLogout()">
+          Sim, Sair
+        </button>
+        <button class="cancel-logout-btn" (click)="closeLogoutModal()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
 </aside>
