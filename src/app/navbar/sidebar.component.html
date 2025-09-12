@@ -1,9 +1,17 @@
-<aside class="sidebar" [class.collapsed]="isCollapsed">
+<div class="mobile-overlay" 
+     *ngIf="isMobile && isMobileOpen" 
+     (click)="onOverlayClick()"></div>
+
+<aside class="sidebar" 
+       [class.collapsed]="isCollapsed && !isMobile"
+       [class.mobile-open]="isMobileOpen"
+       [class.mobile]="isMobile">
+       
   <!-- Header da Sidebar -->
   <div class="sidebar-header">
-    <h2 class="app-title" [class.hidden]="isCollapsed">FinPro</h2>
+    <h2 class="app-title" [class.hidden]="isCollapsed && !isMobile">FinPro</h2>
     <button class="toggle-btn" (click)="toggleSidebar()">
-      @if (!isCollapsed) {
+      @if (!isCollapsed && !isMobile) {
       <img src="/assets/open.svg" alt="Fechar menu" class="toggle-icon">
       } @else {
       <img src="/assets/close.svg" alt="Abrir menu" class="toggle-icon">
@@ -14,84 +22,111 @@
   <!-- Menu de navegação -->
   <nav class="sidebar-nav">
     <div class="menu-section">
-      <h3 class="section-title" [class.hidden]="isCollapsed">Principal</h3>
+      <h3 class="section-title" [class.hidden]="isCollapsed && !isMobile">Principal</h3>
 
       <ul class="menu-list">
         <li class="menu-item">
-          <a [routerLink]="['/app/dashboard']" routerLinkActive="active" class="menu-link"
-            [title]="isCollapsed ? 'Dashboard' : ''">
+          <a [routerLink]="['/app/dashboard']" 
+             routerLinkActive="active" 
+             class="menu-link"
+             (click)="onMenuItemClick()"
+             [title]="(isCollapsed && !isMobile) ? 'Dashboard' : ''">
             <img src="/assets/dashboard.svg" alt="Dashboard" class="menu-icon">
-            <span class="menu-label" [class.hidden]="isCollapsed">Dashboard</span>
+            <span class="menu-label" [class.hidden]="isCollapsed && !isMobile">Dashboard</span>
           </a>
         </li>
 
         <li class="menu-item">
-          <a [routerLink]="['/app/transacoes']" routerLinkActive="active" class="menu-link"
-            [title]="isCollapsed ? 'Transações' : ''">
+          <a [routerLink]="['/app/transacoes']" 
+             routerLinkActive="active" 
+             class="menu-link"
+             (click)="onMenuItemClick()"
+             [title]="(isCollapsed && !isMobile) ? 'Transações' : ''">
             <img src="/assets/wallet.svg" alt="Transações" class="menu-icon">
-            <span class="menu-label" [class.hidden]="isCollapsed">Transações</span>
+            <span class="menu-label" [class.hidden]="isCollapsed && !isMobile">Transações</span>
           </a>
         </li>
 
         <li class="menu-item">
-          <a [routerLink]="['/app/receitas']" routerLinkActive="active" class="menu-link"
-            [title]="isCollapsed ? 'Receitas' : ''">
+          <a [routerLink]="['/app/receitas']" 
+             routerLinkActive="active" 
+             class="menu-link"
+             (click)="onMenuItemClick()"
+             [title]="(isCollapsed && !isMobile) ? 'Receitas' : ''">
             <img src="/assets/receitas.svg" alt="Receitas" class="menu-icon">
-            <span class="menu-label" [class.hidden]="isCollapsed">Receitas</span>
+            <span class="menu-label" [class.hidden]="isCollapsed && !isMobile">Receitas</span>
           </a>
         </li>
 
         <li class="menu-item">
-          <a [routerLink]="['/app/despesas']" routerLinkActive="active" class="menu-link"
-            [title]="isCollapsed ? 'Despesas' : ''">
+          <a [routerLink]="['/app/despesas']" 
+             routerLinkActive="active" 
+             class="menu-link"
+             (click)="onMenuItemClick()"
+             [title]="(isCollapsed && !isMobile) ? 'Despesas' : ''">
             <img src="/assets/despesas.svg" alt="Despesas" class="menu-icon">
-            <span class="menu-label" [class.hidden]="isCollapsed">Despesas</span>
+            <span class="menu-label" [class.hidden]="isCollapsed && !isMobile">Despesas</span>
           </a>
         </li>
 
         <li class="menu-item">
-          <a [routerLink]="['/app/cofrinhos']" routerLinkActive="active" class="menu-link"
-            [title]="isCollapsed ? 'Cofrinhos' : ''">
+          <a [routerLink]="['/app/cofrinhos']" 
+             routerLinkActive="active" 
+             class="menu-link"
+             (click)="onMenuItemClick()"
+             [title]="(isCollapsed && !isMobile) ? 'Cofrinhos' : ''">
             <img src="/assets/piggy.svg" alt="Cofrinhos" class="menu-icon">
-            <span class="menu-label" [class.hidden]="isCollapsed">Cofrinhos</span>
+            <span class="menu-label" [class.hidden]="isCollapsed && !isMobile">Cofrinhos</span>
           </a>
         </li>
       </ul>
     </div>
 
     <div class="menu-section">
-      <h3 class="section-title" [class.hidden]="isCollapsed">Investimentos</h3>
+      <h3 class="section-title" [class.hidden]="isCollapsed && !isMobile">Investimentos</h3>
       
       <ul class="menu-list">
         <li class="menu-item">
-          <a [routerLink]="['/app/conteudo-educacional']" routerLinkActive="active" class="menu-link"
-            [title]="isCollapsed ? 'Conteúdo Educacional' : ''">
+          <a [routerLink]="['/app/conteudo-educacional']" 
+             routerLinkActive="active" 
+             class="menu-link"
+             (click)="onMenuItemClick()"
+             [title]="(isCollapsed && !isMobile) ? 'Conteúdo Educacional' : ''">
             <img src="/assets/book-open.svg" alt="Conteudo Educacional" class="menu-icon">
-            <span class="menu-label" [class.hidden]="isCollapsed">Educacional</span>
+            <span class="menu-label" [class.hidden]="isCollapsed && !isMobile">Educacional</span>
           </a>
         </li>
         
         <li class="menu-item">
-          <a [routerLink]="['/app/calculadora']" routerLinkActive="active" class="menu-link"
-            [title]="isCollapsed ? 'Calculadora' : ''">
+          <a [routerLink]="['/app/calculadora']" 
+             routerLinkActive="active" 
+             class="menu-link"
+             (click)="onMenuItemClick()"
+             [title]="(isCollapsed && !isMobile) ? 'Calculadora' : ''">
             <img src="/assets/calculadora.svg" alt="Calculadora" class="menu-icon">
-            <span class="menu-label" [class.hidden]="isCollapsed">Calculadora</span>
+            <span class="menu-label" [class.hidden]="isCollapsed && !isMobile">Calculadora</span>
           </a>
         </li>
 
         <li class="menu-item">
-          <a [routerLink]="['/app/perfil-investimento']" routerLinkActive="active" class="menu-link"
-            [title]="isCollapsed ? 'Perfil Investimento' : ''">
+          <a [routerLink]="['/app/perfil-investimento']" 
+             routerLinkActive="active" 
+             class="menu-link"
+             (click)="onMenuItemClick()"
+             [title]="(isCollapsed && !isMobile) ? 'Perfil Investimento' : ''">
             <img src="/assets/chart-histogram.svg" alt="Perfil Investimento" class="menu-icon">
-            <span class="menu-label" [class.hidden]="isCollapsed">Perfil do Investidor</span>
+            <span class="menu-label" [class.hidden]="isCollapsed && !isMobile">Perfil do Investidor</span>
           </a>
         </li>
 
         <li class="menu-item">
-          <a [routerLink]="['/app/recomendacoes-investimento']" routerLinkActive="active" class="menu-link"
-            [title]="isCollapsed ? 'Recomendações' : ''">
+          <a [routerLink]="['/app/recomendacoes-investimento']" 
+             routerLinkActive="active" 
+             class="menu-link"
+             (click)="onMenuItemClick()"
+             [title]="(isCollapsed && !isMobile) ? 'Recomendações' : ''">
             <img src="/assets/bar-chart.svg" alt="Recomendações de investimento" class="menu-icon">
-            <span class="menu-label" [class.hidden]="isCollapsed">Recomendações</span>
+            <span class="menu-label" [class.hidden]="isCollapsed && !isMobile">Recomendações</span>
           </a>
         </li>
       </ul>
@@ -100,20 +135,27 @@
 
   <div class="sidebar-footer">
     <!-- Informações do usuário -->
-     <a [routerLink]="['/app/perfil']" routerLinkActive="active" class="user-info" [class.collapsed]="isCollapsed" [title]="isCollapsed ? 'Meu Perfil' : ''">
-         <div class="user-avatar" [class.hidden]="isCollapsed">
+     <a [routerLink]="['/app/perfil']" 
+        routerLinkActive="active" 
+        class="user-info" 
+        [class.collapsed]="isCollapsed && !isMobile" 
+        (click)="onMenuItemClick()"
+        [title]="(isCollapsed && !isMobile) ? 'Meu Perfil' : ''">
+         <div class="user-avatar">
            <img src="/assets/user-avatar.svg" alt="Avatar" class="avatar-icon">
          </div>
-         <div class="user-details" [class.hidden]="isCollapsed">
+         <div class="user-details" [class.hidden]="isCollapsed && !isMobile">
            <div class="user-name">{{ getUserName() }}</div>
            <div class="user-email">{{ getUserEmail() }}</div>
        </div>
      </a>
 
     <!-- Botão de logout -->
-    <button class="logout-btn" (click)="openLogoutModal()" [title]="isCollapsed ? 'Sair' : ''">
+    <button class="logout-btn" 
+            (click)="openLogoutModal()" 
+            [title]="(isCollapsed && !isMobile) ? 'Sair' : ''">
       <img src="/assets/logout.svg" alt="Sair" class="logout-icon">
-      <span class="logout-label" [class.hidden]="isCollapsed">Sair</span>
+      <span class="logout-label" [class.hidden]="isCollapsed && !isMobile">Sair</span>
     </button>
   </div>
 

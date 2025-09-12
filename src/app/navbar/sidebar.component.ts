@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
@@ -16,10 +16,48 @@ export class SidebarComponent {
   private router = inject(Router);
 
   isCollapsed = false;
+  isMobileOpen = false;
   showLogoutModal = false;
+  isMobile = false;
+
+  constructor() {
+    this.checkScreenSize();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.checkScreenSize();
+  }
+
+  private checkScreenSize() {
+    this.isMobile = window.innerWidth <= 768;
+    if (!this.isMobile) {
+      this.isMobileOpen = false;
+    }
+  }
 
   toggleSidebar() {
-    this.isCollapsed = !this.isCollapsed;
+    if (this.isMobile) {
+      this.isMobileOpen = !this.isMobileOpen;
+    } else {
+      this.isCollapsed = !this.isCollapsed;
+    }
+  }
+
+  closeMobileSidebar() {
+    if (this.isMobile) {
+      this.isMobileOpen = false;
+    }
+  }
+
+  onOverlayClick() {
+    this.closeMobileSidebar();
+  }
+
+  onMenuItemClick() {
+    if (this.isMobile) {
+      this.isMobileOpen = false;
+    }
   }
 
   openLogoutModal() {
