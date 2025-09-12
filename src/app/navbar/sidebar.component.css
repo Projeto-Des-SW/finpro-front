@@ -49,8 +49,8 @@
 }
 
 .toggle-btn {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: transparent;
+  border: none;
   border-radius: 6px;
   padding: 8px;
   cursor: pointer;

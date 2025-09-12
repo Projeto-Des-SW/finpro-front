@@ -7,7 +7,7 @@
 .main-content {
   flex: 1;
   margin-left: 280px;
-  background: #FAFAFA;
+  background: white;
   overflow-y: auto;
   transition: margin-left 0.3s ease;
 }
