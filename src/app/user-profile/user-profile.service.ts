@@ -6,7 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { InvestmentProfileService } from '../investment-profile/investment-profile.service';
 import { InvestmentRecommendationsService, InvestmentRecommendation } from '../investment-recommendations/investment-recommendations.service';
 import { InvestorProfileResponseDTO } from '../entity/investment-profile';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../environments/environment.prod';
 
 export interface UserProfileData {
   personalInfo: {
