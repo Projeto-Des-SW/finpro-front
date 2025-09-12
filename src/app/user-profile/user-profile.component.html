@@ -1,0 +1,278 @@
+<div class="profile-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="loading-spinner"></div>
+    <p>Carregando seus dados...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!loading && error" class="error-state">
+    <div class="error-icon">⚠️</div>
+    <h3>Erro ao Carregar Perfil</h3>
+    <p>{{ error }}</p>
+    <button class="btn-primary" (click)="loadUserProfile()">
+      Tentar Novamente
+    </button>
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="!loading && !error && profileData" class="profile-content">
+    
+    <!-- Header -->
+    <div class="profile-header">
+      <div class="header-main">
+        <div class="user-avatar">
+          <div class="avatar-circle">
+            {{ getUserInitials() }}
+          </div>
+        </div>
+        
+        <div class="user-info">
+          <h1 class="user-name">{{ profileData.personalInfo.name }}</h1>
+          <p class="user-email">{{ profileData.personalInfo.email }}</p>
+          <div class="user-badges">
+            <span class="badge role-badge">{{ getRoleText(profileData.personalInfo.role) }}</span>
+            <span class="badge member-badge">Membro desde {{ profileData.personalInfo.memberSince }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button class="btn-danger" (click)="openLogoutModal()">
+          <img src="/assets/logout.svg" alt="Sair" class="btn-icon">
+          Sair
+        </button>
+      </div>
+    </div>
+
+    <!-- Profile Completion -->
+    <div class="completion-section">
+      <div class="completion-header">
+        <h3>Completude do Perfil</h3>
+        <span class="completion-percentage">{{ getCompletionPercentage() }}%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="getCompletionPercentage()"></div>
+      </div>
+      <p class="completion-text">
+        {{ getCompletionPercentage() === 100 ? 'Perfil completo! 🎉' : 'Complete seu perfil para uma melhor experiência' }}
+      </p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div *ngIf="userStats" class="stats-section">
+      <h2 class="section-title">Suas Estatísticas</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <img src="/assets/piggy.svg" alt="Cofrinhos" class="stat-icon">
+          <div class="stat-content">
+            <h3 class="stat-value">{{ userStats.totalPiggyBanks }}</h3>
+            <p class="stat-label">Cofrinhos Criados</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <img src="/assets/target.svg" alt="Metas Atingidas" class="stat-icon">
+          <div class="stat-content">
+            <h3 class="stat-value">{{ userStats.completedGoals }}</h3>
+            <p class="stat-label">Metas Atingidas</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <img src="/assets/wallet.svg" alt="Total Poupado" class="stat-icon">
+          <div class="stat-content">
+            <h3 class="stat-value">{{ formatCurrency(userStats.totalSaved) }}</h3>
+            <p class="stat-label">Total Poupado</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <img src="/assets/bar-chart.svg" alt="Investimentos ativos" class="stat-icon">
+          <div class="stat-content">
+            <h3 class="stat-value">{{ userStats.activeInvestments }}</h3>
+            <p class="stat-label">Investimentos Ativos</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Investment Profile Section -->
+    <div class="investment-section">
+      <div class="section-header">
+        <h2 class="section-title">Perfil de Investimento</h2>
+        <button class="btn-outline" (click)="goToInvestmentProfile()">
+          {{ profileData.hasCompletedProfile ? 'Atualizar' : 'Criar' }} Perfil
+        </button>
+      </div>
+
+      <div *ngIf="!profileData.hasCompletedProfile" class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3>Complete seu Perfil de Investimento</h3>
+        <p>Responda ao questionário para receber recomendações personalizadas</p>
+        <button class="btn-primary" (click)="goToInvestmentProfile()">
+          Fazer Questionário
+        </button>
+      </div>
+
+      <div *ngIf="profileData.hasCompletedProfile && profileData.investorProfile" class="investment-profile-card">
+        <div class="profile-badge" [style.background-color]="getRiskProfileColor()">
+          {{ getRiskProfileText() }}
+        </div>
+        
+        <div class="profile-details">
+          <div class="profile-grid">
+            <div class="profile-item">
+              <strong>Tolerância ao Risco:</strong>
+              <span>{{ profileData.investorProfile.riskTolerance === 'LOW' ? 'Baixa' : 
+                      profileData.investorProfile.riskTolerance === 'MEDIUM' ? 'Média' : 'Alta' }}</span>
+            </div>
+            
+            <div class="profile-item">
+              <strong>Prazo de Investimento:</strong>
+              <span>{{ profileData.investorProfile.investmentTerm === 'SHORT_TERM' ? 'Curto Prazo' : 
+                      profileData.investorProfile.investmentTerm === 'MEDIUM_TERM' ? 'Médio Prazo' : 'Longo Prazo' }}</span>
+            </div>
+            
+            <div class="profile-item">
+              <strong>Nível de Conhecimento:</strong>
+              <span>{{ profileData.investorProfile.knowledgeLevel === 'BEGINNER' ? 'Iniciante' : 
+                      profileData.investorProfile.knowledgeLevel === 'INTERMEDIATE' ? 'Intermediário' : 'Avançado' }}</span>
+            </div>
+            
+            <div class="profile-item">
+              <strong>Pontuação Total:</strong>
+              <span>{{ profileData.investorProfile.score }}/30</span>
+            </div>
+          </div>
+          
+          <p class="profile-description">{{ getRiskProfileDescription() }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations Section -->
+    <div *ngIf="profileData.hasCompletedProfile && profileData.recommendations" class="recommendations-section">
+      <div class="section-header">
+        <h2 class="section-title">Suas Recomendações de Investimento</h2>
+        <button class="btn-outline" (click)="goToRecommendations()">
+          Ver Todas
+        </button>
+      </div>
+
+      <div class="recommendations-preview">
+        <div class="recommendations-grid">
+          <div *ngFor="let recommendation of profileData.recommendations.recommendations.slice(0, 3); let i = index" 
+               class="recommendation-item">
+            <div class="recommendation-number">{{ i + 1 }}</div>
+            <div class="recommendation-content">
+              <h4>{{ recommendation }}</h4>
+            </div>
+          </div>
+        </div>
+        
+        <div *ngIf="profileData.recommendations.recommendations.length > 3" class="more-recommendations">
+          <p>+ {{ profileData.recommendations.recommendations.length - 3 }} outras recomendações</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-section">
+      <h2 class="section-title">Ações Rápidas</h2>
+      <div class="actions-grid">
+        <button class="action-card" (click)="goToPiggyBanks()">
+          <img src="/assets/piggy.svg" alt="Cofrinhos" class="stat-icon">
+          <div class="action-content">
+            <h3>Meus Cofrinhos</h3>
+            <p>Gerencie suas metas de economia</p>
+          </div>
+        </button>
+
+        <button class="action-card" (click)="goToCalculator()">
+          <img src="/assets/calculadora.svg" alt="Calculadora" class="stat-icon">
+          <div class="action-content">
+            <h3>Calculadora</h3>
+            <p>Simule seus investimentos</p>
+          </div>
+        </button>
+
+        <button class="action-card" (click)="goToEducationalContent()">
+          <img src="/assets/book-open.svg" alt="Conteudo Educacional" class="stat-icon">
+          <div class="action-content">
+            <h3>Aprenda</h3>
+            <p>Conteúdo educacional</p>
+          </div>
+        </button>
+
+        <button class="action-card" (click)="goToDashboard()">
+          <img src="/assets/dashboard.svg" alt="Dashboard" class="stat-icon">
+          <div class="action-content">
+            <h3>Dashboard</h3>
+            <p>Visão geral financeira</p>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Edição -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Editar Perfil</h3>
+        <button class="modal-close" (click)="closeEditModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <form [formGroup]="editProfileForm" (ngSubmit)="saveProfile()">
+          <div class="form-group">
+            <label for="name">Nome Completo</label>
+            <input type="text" id="name" formControlName="name" required>
+            <div class="error" *ngIf="editProfileForm.get('name')?.invalid && editProfileForm.get('name')?.touched">
+              <span *ngIf="editProfileForm.get('name')?.hasError('required')">Nome é obrigatório</span>
+              <span *ngIf="editProfileForm.get('name')?.hasError('minlength')">Nome deve ter pelo menos 2 caracteres</span>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-primary" (click)="saveProfile()" [disabled]="editProfileForm.invalid">
+          Salvar Alterações
+        </button>
+        <button class="btn-secondary" (click)="closeEditModal()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Logout -->
+  <div class="modal-overlay" *ngIf="showLogoutModal" (click)="closeLogoutModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirmar Logout</h3>
+        <button class="modal-close" (click)="closeLogoutModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <p>Tem certeza que deseja sair?</p>
+        <p><small>Você precisará fazer login novamente para acessar o sistema.</small></p>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-danger" (click)="confirmLogout()">
+          Sim, Sair
+        </button>
+        <button class="btn-secondary" (click)="closeLogoutModal()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

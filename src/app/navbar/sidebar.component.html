@@ -98,18 +98,17 @@
     </div>
   </nav>
 
-  <!-- Seção do usuário e logout -->
   <div class="sidebar-footer">
     <!-- Informações do usuário -->
-    <div class="user-info" [class.collapsed]="isCollapsed">
-      <div class="user-avatar" [class.hidden]="isCollapsed">
-        <img src="/assets/user-avatar.svg" alt="Avatar" class="avatar-icon">
-      </div>
-      <div class="user-details" [class.hidden]="isCollapsed">
-        <div class="user-name">{{ getUserName() }}</div>
-        <div class="user-email">{{ getUserEmail() }}</div>
-      </div>
-    </div>
+     <a [routerLink]="['/app/perfil']" routerLinkActive="active" class="user-info" [class.collapsed]="isCollapsed" [title]="isCollapsed ? 'Meu Perfil' : ''">
+         <div class="user-avatar" [class.hidden]="isCollapsed">
+           <img src="/assets/user-avatar.svg" alt="Avatar" class="avatar-icon">
+         </div>
+         <div class="user-details" [class.hidden]="isCollapsed">
+           <div class="user-name">{{ getUserName() }}</div>
+           <div class="user-email">{{ getUserEmail() }}</div>
+       </div>
+     </a>
 
     <!-- Botão de logout -->
     <button class="logout-btn" (click)="openLogoutModal()" [title]="isCollapsed ? 'Sair' : ''">
