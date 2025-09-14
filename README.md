@@ -71,7 +71,7 @@ npm install -g @angular/cli
 ng serve
 ```
 
-O sistema estará disponível em: **https://finpro-service-191642919864.southamerica-east1.run.app/register**
+O sistema estará disponível em: **[FINPRO](https://finpro-frontend-191642919864.southamerica-east1.run.app/register)**
 
 ## 📡 Configuração
 
@@ -81,7 +81,7 @@ O arquivo `src/environments/environment.prod.ts` está configurado para:
 ```typescript
 export const environment = {
   production: true,
-  apiUrl: 'https://finpro-service-191642919864.southamerica-east1.run.app'
+  apiUrl: 'https://finpro-frontend-191642919864.southamerica-east1.run.app'
 };
 ```
 
