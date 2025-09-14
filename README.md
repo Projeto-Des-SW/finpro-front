@@ -99,7 +99,7 @@ O sistema também está disponível online em:
 
 ## 📎 Links Relacionados
 
-🔙 [Backend do FinPro (Spring Boot)](https://github.com/Projeto-Des-SW/finpro-service)
+🔙 [Backend do FinPro (Spring Boot)](https://github.com/Projeto-Des-SW/finpro-service)  
 🎥 [Pitch](https://www.youtube.com/watch?v=b6vzSrNGmP)
 
 ## 👨‍🏫 Professor Responsável
