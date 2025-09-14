@@ -44,7 +44,7 @@ Este repositório está organizado com:
 
 ### Pré-requisitos
 
-1. **Backend (API) rodando** - Certifique-se de que o [backend Spring Boot](https://github.com/Projeto-Des-SW/finpro-service) esteja executando em `http://localhost:8080`
+1. **Backend (API) rodando** - Certifique-se de que o [backend Spring Boot](https://github.com/Projeto-Des-SW/finpro-service) esteja executando em `https://finpro-service-191642919864.southamerica-east1.run.app/register`
 2. **Node.js** na versão mais atual
 3. **Angular CLI** instalado globalmente
 
@@ -71,17 +71,17 @@ npm install -g @angular/cli
 ng serve
 ```
 
-O sistema estará disponível em: **http://localhost:4200**
+O sistema estará disponível em: **https://finpro-service-191642919864.southamerica-east1.run.app/register**
 
 ## 📡 Configuração
 
 ### Ambiente de Desenvolvimento
 
-O arquivo `src/environments/environment.ts` está configurado para:
+O arquivo `src/environments/environment.prod.ts` está configurado para:
 ```typescript
 export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8080'
+  production: true,
+  apiUrl: 'https://finpro-service-191642919864.southamerica-east1.run.app'
 };
 ```
 
@@ -92,9 +92,15 @@ Certifique-se de que o backend esteja rodando na porta 8080 antes de iniciar o f
 
 🔙 [Protótipos Figma](https://www.figma.com/design/4blULCjgSOj3r65yfiCmb7/Projet%C3%A3o?node-id=7-865&t=uHt14WtNrZOlpRbP-1)
 
+## 🌐 Hospedagem
+
+O sistema também está disponível online em:  
+**[FinPro](https://finpro-frontend-191642919864.southamerica-east1.run.app/register)**
+
 ## 📎 Links Relacionados
 
-🔙 [Backend do FinPro (Spring Boot)](https://github.com/Projeto-Des-SW/finpro-service)
+🔙 [Backend do FinPro (Spring Boot)](https://github.com/Projeto-Des-SW/finpro-service)  
+🎥 [Pitch](https://www.youtube.com/watch?v=b6vzSrNGmP)
 
 ## 👨‍🏫 Professor Responsável
 
